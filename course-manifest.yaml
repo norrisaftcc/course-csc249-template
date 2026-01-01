@@ -1,0 +1,121 @@
+# course-manifest.yaml
+# Course Development Tracking System (CDTS) v0.1
+# CSC 249: Data Structures and Algorithms
+
+manifest_version: "0.1"
+last_updated: "2026-01-01T00:00:00Z"
+
+course:
+  id: "CSC-249"
+  name: "Data Structures and Algorithms"
+  credits: 3
+  description: |
+    Data structures and algorithms with dual-language instruction (C++ and Python).
+    Philosophy: "Bloom's Taxonomy Starts with Create" - students build first,
+    then understand why it works. Mandatory AI collaboration with documentation.
+  prerequisites:
+    - "CSC-134"
+  corequisites: []
+  repository: "course-csc249-template"
+  claude_project_id: ""
+
+  outcomes:
+    - "Implement fundamental data structures in C++ and Python"
+    - "Analyze algorithm complexity using Big O notation"
+    - "Select appropriate data structures for given problems"
+    - "Collaborate effectively with AI tools in software development"
+    - "Use version control and pull request workflows professionally"
+
+modules:
+  - id: "M01"
+    name: "Foundations: OOP and AI Collaboration"
+    weeks: [1, 2]
+    description: "Encapsulation, ADTs, class design, AI collaboration workflow"
+    status: "planned"
+    deliverables: []
+
+  - id: "M02"
+    name: "Algorithm Analysis and Recursion"
+    weeks: [3, 4]
+    description: "Big O notation, benchmarking, recursive thinking"
+    status: "planned"
+    deliverables: []
+
+  - id: "M03"
+    name: "Arrays and Sorting"
+    weeks: [5, 6]
+    description: "Selection, insertion, merge sort; complexity analysis"
+    status: "draft"
+    deliverables: []
+
+  - id: "M04"
+    name: "Linear Structures: Stacks, Queues, Lists"
+    weeks: [7, 8]
+    description: "LIFO/FIFO structures, node-based linked lists"
+    status: "draft"
+    deliverables:
+      - type: "tutorial"
+        name: "Stacks Tutorial"
+        file: "module-04/tutorials/stacks.md"
+        status: "complete"
+
+      - type: "lab"
+        name: "Undo System Lab"
+        file: "module-04/labs/lab-undo-system/"
+        status: "planned"
+
+      - type: "lab"
+        name: "Request Queue Lab"
+        file: "module-04/labs/lab-request-queue/"
+        status: "planned"
+
+      - type: "lab"
+        name: "Linked List Lab"
+        file: "module-04/labs/lab-linked-list/"
+        status: "planned"
+
+      - type: "homework"
+        name: "Inventory Shop"
+        file: "module-04/homework/inventory-shop/"
+        status: "planned"
+
+      - type: "rubric"
+        name: "Stacks/Queues Rubric"
+        file: "module-04/rubrics/stacks-queues-rubric.yaml"
+        status: "complete"
+
+  - id: "M05"
+    name: "Hashing and Hash Tables"
+    weeks: [9, 10]
+    description: "Hash functions, collision resolution, hash tables"
+    status: "draft"
+    deliverables: []
+
+  - id: "M06"
+    name: "Trees and Binary Search Trees"
+    weeks: [11, 12]
+    description: "Tree terminology, BST operations, heaps, traversals"
+    status: "draft"
+    deliverables: []
+
+  - id: "M07"
+    name: "Graphs and Graph Algorithms"
+    weeks: [13, 14]
+    description: "Graph representations, BFS, DFS, shortest path"
+    status: "planned"
+    deliverables: []
+
+  - id: "M08"
+    name: "Integration and Final Project"
+    weeks: [15, 16]
+    description: "Capstone project using multiple data structures"
+    status: "planned"
+    deliverables: []
+
+progress:
+  total_deliverables: 6
+  complete: 2
+  review: 0
+  draft: 0
+  planned: 4
+  percentage: 33
