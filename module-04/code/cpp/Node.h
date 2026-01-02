@@ -1,5 +1,5 @@
 #ifndef NODE_H
-#define NODE
+#define NODE_H
 
 /* 
 Implementation of the Node class
