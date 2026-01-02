@@ -444,7 +444,7 @@ GitHub_Workflow_Guide.md      - PR submission workflow (Ready)
 algocratic/
   README.md                   - Course philosophy (Ready)
   ai-collab.md                - AI usage guide (Ready)
-  stucture-selection.md       - Data structure decision matrix (Ready)
+  structure-selection.md      - Data structure decision matrix (Ready)
 
 m1-objects/
   README.md                   - Conceptual notes (Draft)
