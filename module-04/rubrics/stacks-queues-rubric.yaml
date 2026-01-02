@@ -1,0 +1,145 @@
+# Module 04: Stacks and Queues Grading Rubric
+# Total: 100 points
+
+assignment:
+  name: "Stacks and Queues"
+  module: "M04"
+  total_points: 100
+
+criteria:
+  - name: "Part A: Stack Implementation"
+    points: 40
+    subcriteria:
+      - name: "All 5 operations implemented correctly"
+        points: 20
+        levels:
+          - score: 20
+            description: "push, pop, peek, isEmpty, size all work correctly"
+          - score: 15
+            description: "4 operations work correctly"
+          - score: 10
+            description: "3 operations work correctly"
+          - score: 5
+            description: "1-2 operations work"
+          - score: 0
+            description: "No operations work"
+
+      - name: "Empty stack cases handled"
+        points: 5
+        levels:
+          - score: 5
+            description: "Graceful error handling for pop/peek on empty"
+          - score: 2
+            description: "Partial handling"
+          - score: 0
+            description: "Crashes on empty stack"
+
+      - name: "Undo demo works as specified"
+        points: 10
+        levels:
+          - score: 10
+            description: "All demo features work (add, undo, show, quit)"
+          - score: 7
+            description: "Most features work"
+          - score: 4
+            description: "Basic functionality only"
+          - score: 0
+            description: "Demo does not run"
+
+      - name: "Code quality"
+        points: 5
+        levels:
+          - score: 5
+            description: "Well-commented, readable, follows conventions"
+          - score: 3
+            description: "Some comments, mostly readable"
+          - score: 1
+            description: "Minimal comments, hard to read"
+
+  - name: "Part B: Queue Implementation"
+    points: 40
+    subcriteria:
+      - name: "All 5 operations implemented correctly"
+        points: 20
+        levels:
+          - score: 20
+            description: "enqueue, dequeue, front, isEmpty, size all work"
+          - score: 15
+            description: "4 operations work correctly"
+          - score: 10
+            description: "3 operations work correctly"
+          - score: 5
+            description: "1-2 operations work"
+          - score: 0
+            description: "No operations work"
+
+      - name: "Empty queue cases handled"
+        points: 5
+        levels:
+          - score: 5
+            description: "Graceful error handling for dequeue/front on empty"
+          - score: 2
+            description: "Partial handling"
+          - score: 0
+            description: "Crashes on empty queue"
+
+      - name: "Request demo works as specified"
+        points: 10
+        levels:
+          - score: 10
+            description: "All demo features work (add, process, next, status)"
+          - score: 7
+            description: "Most features work"
+          - score: 4
+            description: "Basic functionality only"
+          - score: 0
+            description: "Demo does not run"
+
+      - name: "Code quality"
+        points: 5
+        levels:
+          - score: 5
+            description: "Well-commented, readable, follows conventions"
+          - score: 3
+            description: "Some comments, mostly readable"
+          - score: 1
+            description: "Minimal comments, hard to read"
+
+  - name: "Part C: Reflection"
+    points: 20
+    subcriteria:
+      - name: "Stack vs Queue explanation"
+        points: 8
+        levels:
+          - score: 8
+            description: "Clear explanation with valid new examples"
+          - score: 6
+            description: "Good explanation, examples could be stronger"
+          - score: 4
+            description: "Basic understanding shown"
+          - score: 0
+            description: "Incorrect or missing"
+
+      - name: "Complexity analysis"
+        points: 6
+        levels:
+          - score: 6
+            description: "Correct Big O, optimization discussed"
+          - score: 4
+            description: "Correct Big O, limited optimization discussion"
+          - score: 2
+            description: "Partial understanding"
+          - score: 0
+            description: "Incorrect or missing"
+
+      - name: "AI collaboration documentation"
+        points: 6
+        levels:
+          - score: 6
+            description: "Honest, detailed log of AI usage"
+          - score: 4
+            description: "Basic log provided"
+          - score: 2
+            description: "Minimal documentation"
+          - score: 0
+            description: "No documentation"
