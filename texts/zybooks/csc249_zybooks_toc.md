@@ -31,5 +31,6 @@ About this material
 25. B-trees
 26. Additional Material 
 
-NOTE: Zybooks allows reorganization of chapters, and so we should consider a more natural "fitting" chapter order for our needs.
+NOTE: Class will only go as far as chapters 1-11 (possibly chapter 12), as the remaining material is "Additional".
+Zybooks allows reorganization of chapters, and so we should consider a more natural "fitting" chapter order for our needs.
 
