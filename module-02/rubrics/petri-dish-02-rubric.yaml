@@ -1,0 +1,157 @@
+# Module 02: Petri Dish 02 - Population Census Grading Rubric
+# Total: 100 points
+
+assignment:
+  name: "Petri Dish 02: Population Census"
+  module: "M02"
+  series: "Petri Dish 2 of 4"
+  total_points: 100
+
+criteria:
+  - name: "Part A: List Construction Measurement"
+    points: 25
+    subcriteria:
+      - name: "Data table complete"
+        points: 5
+        levels:
+          - score: 5
+            description: "All 5 N values tested, operations recorded accurately"
+          - score: 3
+            description: "3-4 values tested"
+          - score: 0
+            description: "Fewer than 3 values or data missing"
+
+      - name: "Big-O identification"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly identifies O(N) with clear explanation of linear relationship"
+          - score: 7
+            description: "Identifies O(N) but explanation is vague"
+          - score: 4
+            description: "Mentions linearity but does not use correct notation"
+          - score: 0
+            description: "Incorrect or missing"
+
+      - name: "Prediction for N=1000"
+        points: 10
+        levels:
+          - score: 10
+            description: "Predicts 1000 operations with correct reasoning from O(N)"
+          - score: 7
+            description: "Prediction is correct but reasoning is incomplete"
+          - score: 3
+            description: "Prediction is incorrect but shows some understanding"
+          - score: 0
+            description: "Missing or no reasoning"
+
+  - name: "Part B: Linear Search Measurement"
+    points: 25
+    subcriteria:
+      - name: "Search data table"
+        points: 5
+        levels:
+          - score: 5
+            description: "All search scenarios completed with accurate comparison counts"
+          - score: 3
+            description: "Most scenarios completed"
+          - score: 0
+            description: "Incomplete data"
+
+      - name: "Best/worst/average case analysis"
+        points: 10
+        levels:
+          - score: 10
+            description: "All three cases correctly identified with Big-O: O(1) best, O(N) worst, O(N) average"
+          - score: 7
+            description: "Two cases correct"
+          - score: 4
+            description: "One case correct"
+          - score: 0
+            description: "Incorrect or missing"
+
+      - name: "Non-existent value pattern"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly identifies that non-existent always checks N items, explains why"
+          - score: 7
+            description: "Pattern identified but explanation incomplete"
+          - score: 3
+            description: "Data recorded but pattern not identified"
+          - score: 0
+            description: "Missing"
+
+  - name: "Part C: Code Modification"
+    points: 25
+    subcriteria:
+      - name: "Best match feature"
+        points: 15
+        levels:
+          - score: 15
+            description: "Closest value tracked during search, highlighted in green, displayed on completion"
+          - score: 11
+            description: "Tracking works but visual feedback is partial"
+          - score: 7
+            description: "Attempted but logic has errors"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Cumulative search counter"
+        points: 10
+        levels:
+          - score: 10
+            description: "Shows total searches and average comparisons, updates correctly"
+          - score: 7
+            description: "Shows total but average is incorrect or missing"
+          - score: 3
+            description: "Partial implementation"
+          - score: 0
+            description: "Not implemented"
+
+  - name: "Part D: Appendix Translation"
+    points: 25
+    subcriteria:
+      - name: "build_population function"
+        points: 8
+        levels:
+          - score: 8
+            description: "Correctly builds list and returns accurate operation count"
+          - score: 5
+            description: "Builds list but count is incorrect"
+          - score: 2
+            description: "Attempted but fundamentally broken"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "linear_search function"
+        points: 8
+        levels:
+          - score: 8
+            description: "Correctly searches and returns comparison count, handles not-found"
+          - score: 5
+            description: "Search works but count or not-found handling has issues"
+          - score: 2
+            description: "Attempted but broken"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Experiment runner output"
+        points: 5
+        levels:
+          - score: 5
+            description: "Formatted table showing N vs operations/comparisons"
+          - score: 3
+            description: "Output exists but poorly formatted"
+          - score: 0
+            description: "No experiment output"
+
+      - name: "Program compiles and runs"
+        points: 4
+        levels:
+          - score: 4
+            description: "Compiles/runs without errors"
+          - score: 2
+            description: "Runs with warnings"
+          - score: 0
+            description: "Does not compile/run"

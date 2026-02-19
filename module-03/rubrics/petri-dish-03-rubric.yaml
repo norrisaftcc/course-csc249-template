@@ -1,0 +1,157 @@
+# Module 03: Petri Dish 03 - Classification Protocol Grading Rubric
+# Total: 100 points
+
+assignment:
+  name: "Petri Dish 03: Classification Protocol"
+  module: "M03"
+  series: "Petri Dish 3 of 4"
+  total_points: 100
+
+criteria:
+  - name: "Part A: Sorting Observation"
+    points: 25
+    subcriteria:
+      - name: "Data table complete"
+        points: 5
+        levels:
+          - score: 5
+            description: "All 5 N values tested, comparisons and swaps recorded"
+          - score: 3
+            description: "3-4 values tested"
+          - score: 0
+            description: "Fewer than 3 values"
+
+      - name: "N*(N-1)/2 explanation"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly explains that selection sort always makes exactly N*(N-1)/2 comparisons due to nested loops"
+          - score: 7
+            description: "Identifies the match but explanation of why is incomplete"
+          - score: 3
+            description: "Observes the pattern but does not explain it"
+          - score: 0
+            description: "Missing or incorrect"
+
+      - name: "O(N^2) quadrupling explanation"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly explains that doubling N quadruples work because (2N)^2 = 4*N^2"
+          - score: 7
+            description: "Understands O(N^2) but quadrupling explanation is vague"
+          - score: 3
+            description: "Mentions N^2 but doesn't connect to quadrupling"
+          - score: 0
+            description: "Missing or incorrect"
+
+  - name: "Part B: Search Comparison"
+    points: 25
+    subcriteria:
+      - name: "Search data table"
+        points: 5
+        levels:
+          - score: 5
+            description: "All 4 target scenarios tested with both search methods"
+          - score: 3
+            description: "Most scenarios tested"
+          - score: 0
+            description: "Incomplete"
+
+      - name: "N=1000 calculation"
+        points: 10
+        levels:
+          - score: 10
+            description: "Linear=1000, Binary=ceil(log2(1000))=10 with correct calculation shown"
+          - score: 7
+            description: "Both answers correct but calculation not shown"
+          - score: 4
+            description: "One answer correct"
+          - score: 0
+            description: "Both incorrect or missing"
+
+      - name: "Sort-then-search cost analysis"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly analyzes: for 1 search, linear is cheaper; for many searches, sort+binary wins. Uses concrete numbers."
+          - score: 7
+            description: "General understanding but numbers are missing or wrong"
+          - score: 3
+            description: "Partial analysis"
+          - score: 0
+            description: "Missing"
+
+  - name: "Part C: Code Modification"
+    points: 25
+    subcriteria:
+      - name: "Insertion sort implementation"
+        points: 15
+        levels:
+          - score: 15
+            description: "Correctly implements insertion sort with animation, counts comparisons/swaps"
+          - score: 11
+            description: "Sort works but animation or counting has issues"
+          - score: 7
+            description: "Attempted but algorithm is incorrect"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Sort comparison and reflection"
+        points: 10
+        levels:
+          - score: 10
+            description: "Comparison display works, reflection correctly identifies insertion sort advantage on nearly-sorted data"
+          - score: 7
+            description: "Comparison works but reflection is incomplete"
+          - score: 3
+            description: "Partial implementation"
+          - score: 0
+            description: "Not implemented"
+
+  - name: "Part D: Appendix Translation"
+    points: 25
+    subcriteria:
+      - name: "Selection sort"
+        points: 8
+        levels:
+          - score: 8
+            description: "Correctly sorts, returns accurate comparison and swap counts"
+          - score: 5
+            description: "Sorts correctly but counts are wrong"
+          - score: 2
+            description: "Attempted but broken"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Linear and binary search"
+        points: 8
+        levels:
+          - score: 8
+            description: "Both search functions work and return accurate comparison counts"
+          - score: 5
+            description: "One works correctly"
+          - score: 2
+            description: "Attempted but both broken"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Experiment output"
+        points: 5
+        levels:
+          - score: 5
+            description: "Formatted comparison tables for both sort costs and search costs"
+          - score: 3
+            description: "Partial output"
+          - score: 0
+            description: "No output"
+
+      - name: "Program runs"
+        points: 4
+        levels:
+          - score: 4
+            description: "Compiles/runs without errors"
+          - score: 2
+            description: "Runs with warnings"
+          - score: 0
+            description: "Does not compile/run"

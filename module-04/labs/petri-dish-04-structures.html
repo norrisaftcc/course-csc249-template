@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Dish 04: Organizational Structures | CSC 249</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e0e0ff;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #00fff5; font-size: 22px; margin-bottom: 4px; text-shadow: 0 0 20px rgba(0,255,245,0.4); }
+        .subtitle { color: #7a7a8e; font-size: 13px; margin-bottom: 12px; }
+        .memo {
+            max-width: 960px; background: #12121e; border: 1px solid #2a2a4a;
+            border-left: 3px solid #ff00ff; padding: 12px 16px; margin-bottom: 12px;
+            font-size: 11px; line-height: 1.6; color: #a0a0c0;
+            box-shadow: 0 0 15px rgba(255,0,255,0.08);
+        }
+        .memo strong { color: #ff00ff; }
+        .memo em { color: #00fff5; font-style: normal; }
+
+        .top-bar {
+            display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .top-bar button {
+            background: #1a1a2e; color: #00fff5; border: 1px solid #00fff5;
+            padding: 6px 12px; font-family: 'Courier New', Consolas, monospace;
+            font-size: 11px; cursor: pointer; border-radius: 3px; transition: all 0.15s;
+        }
+        .top-bar button:hover { background: #00fff5; color: #0a0a0f; box-shadow: 0 0 10px rgba(0,255,245,0.3); }
+        .top-bar button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .top-bar button:disabled:hover { background: #1a1a2e; color: #00fff5; box-shadow: none; }
+        .top-bar .label { color: #7a7a8e; font-size: 11px; }
+        .incoming-info { color: #ff6600; font-size: 11px; }
+
+        .panels {
+            display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+        }
+        .struct-panel {
+            background: #0a0a0f; border: 1px solid #2a2a4a; border-radius: 4px;
+            width: 310px; display: flex; flex-direction: column;
+        }
+        .struct-header {
+            padding: 8px 10px; border-bottom: 1px solid #2a2a4a;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .struct-header h3 { color: #00fff5; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+        .struct-header .ops { color: #7a7a8e; font-size: 10px; }
+        .struct-canvas { flex: 1; }
+        .struct-controls {
+            padding: 8px 10px; border-top: 1px solid #2a2a4a;
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .struct-controls button {
+            background: #12121e; color: #00fff5; border: 1px solid #2a2a4a;
+            padding: 5px 10px; font-family: 'Courier New', Consolas, monospace;
+            font-size: 10px; cursor: pointer; border-radius: 2px; transition: all 0.12s;
+        }
+        .struct-controls button:hover { border-color: #00fff5; box-shadow: 0 0 8px rgba(0,255,245,0.2); }
+        .struct-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .struct-controls button:disabled:hover { border-color: #2a2a4a; box-shadow: none; }
+        .struct-status { padding: 4px 10px; font-size: 10px; color: #ff6600; min-height: 18px; }
+        .struct-metrics { padding: 4px 10px 8px; font-size: 10px; color: #7a7a8e; }
+        .struct-metrics span { color: #39ff14; }
+
+        .explanation {
+            max-width: 960px; background: #12121e; border: 1px solid #2a2a4a;
+            border-radius: 4px; padding: 14px; margin-top: 12px;
+            font-size: 12px; line-height: 1.7; color: #a0a0c0;
+        }
+        .explanation h3 { color: #00fff5; margin-bottom: 8px; }
+        .explanation code { background: #0a0a0f; padding: 1px 5px; border-radius: 2px; color: #39ff14; font-size: 11px; }
+
+        details {
+            max-width: 960px; width: 100%; margin-top: 10px;
+            background: #12121e; border: 1px solid #2a2a4a; border-radius: 4px;
+        }
+        summary { padding: 10px 14px; cursor: pointer; color: #ff00ff; font-size: 13px; font-weight: bold; }
+        summary:hover { color: #00fff5; }
+        .code-block {
+            background: #0a0a0f; border-left: 3px solid #ff00ff; padding: 12px;
+            margin: 8px 14px 14px; font-size: 11px; line-height: 1.5;
+            overflow-x: auto; color: #c0c0e0; white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <h1>PETRI DISH 04: ORGANIZATIONAL STRUCTURES</h1>
+    <p class="subtitle">CSC 249 Module 4 &mdash; Stacks, Queues &amp; Binary Search Trees</p>
+
+    <div class="memo">
+        <strong>MEMO &mdash; DEPARTMENT OF TASK PROCESSING</strong><br>
+        Employee, The Algorithm has determined that flat lists are insufficient for advanced organizational needs.
+        You will observe how the SAME specimens behave under different structural constraints:
+        (1) <em>STACK</em> &mdash; Last In, First Out,
+        (2) <em>QUEUE</em> &mdash; First In, First Out,
+        (3) <em>BINARY SEARCH TREE</em> &mdash; Hierarchical sorted organization.
+        Structure determines behavior. Choose wisely.
+        <em>&mdash; Department of Task Processing</em>
+    </div>
+
+    <div class="top-bar">
+        <span class="label">Incoming specimens:</span>
+        <button onclick="generateIncoming(10)">Generate 10</button>
+        <button onclick="generateIncoming(20)">Generate 20</button>
+        <button onclick="insertSortedData()">Insert 1-10 (sorted)</button>
+        <button onclick="resetAll()">Reset All</button>
+        <span class="incoming-info" id="incoming-info">No specimens queued</span>
+    </div>
+
+    <div class="panels">
+        <!-- STACK -->
+        <div class="struct-panel">
+            <div class="struct-header">
+                <h3>Stack (LIFO)</h3>
+                <span class="ops" id="stack-ops">size: 0</span>
+            </div>
+            <div id="stack-canvas" class="struct-canvas"></div>
+            <div class="struct-status" id="stack-status"></div>
+            <div class="struct-controls">
+                <button id="btn-stack-push" onclick="stackPush()" disabled>Push</button>
+                <button id="btn-stack-pop" onclick="stackPop()" disabled>Pop</button>
+                <button id="btn-stack-peek" onclick="stackPeek()" disabled>Peek</button>
+            </div>
+            <div class="struct-metrics" id="stack-metrics">Push: O(1) | Pop: O(1) | Last in = First out</div>
+        </div>
+
+        <!-- QUEUE -->
+        <div class="struct-panel">
+            <div class="struct-header">
+                <h3>Queue (FIFO)</h3>
+                <span class="ops" id="queue-ops">size: 0</span>
+            </div>
+            <div id="queue-canvas" class="struct-canvas"></div>
+            <div class="struct-status" id="queue-status"></div>
+            <div class="struct-controls">
+                <button id="btn-queue-enq" onclick="queueEnqueue()" disabled>Enqueue</button>
+                <button id="btn-queue-deq" onclick="queueDequeue()" disabled>Dequeue</button>
+                <button id="btn-queue-front" onclick="queueFront()" disabled>Front</button>
+            </div>
+            <div class="struct-metrics" id="queue-metrics">Enqueue: O(1) | Dequeue: O(1) | First in = First out</div>
+        </div>
+
+        <!-- BST -->
+        <div class="struct-panel">
+            <div class="struct-header">
+                <h3>BST (Sorted Tree)</h3>
+                <span class="ops" id="bst-ops">size: 0</span>
+            </div>
+            <div id="bst-canvas" class="struct-canvas"></div>
+            <div class="struct-status" id="bst-status"></div>
+            <div class="struct-controls">
+                <button id="btn-bst-insert" onclick="bstInsert()" disabled>Insert</button>
+                <button id="btn-bst-search" onclick="bstSearchUI()" disabled>Search</button>
+            </div>
+            <div class="struct-metrics" id="bst-metrics">Insert: O(log N) avg | Search: O(log N) avg</div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>What You're Seeing</h3>
+        <p><strong>Stack (LIFO):</strong> Items stack vertically. Push adds to the top. Pop removes from the top.
+        The most recent item is always the one that leaves first &mdash; like a stack of plates.</p>
+        <p><strong>Queue (FIFO):</strong> Items line up horizontally. Enqueue adds to the right. Dequeue removes from the left.
+        The oldest item is always processed first &mdash; like a line at a store.</p>
+        <p><strong>BST:</strong> Items are organized in a tree by value. Left children have smaller values, right children have larger.
+        Search follows a path from root, going left or right at each node. Balanced trees give <code>O(log N)</code> search.
+        Try "Insert 1-10 (sorted)" to see what happens when data arrives in order &mdash; the tree degenerates into a linked list!</p>
+    </div>
+
+    <!-- Python Appendix -->
+    <details>
+        <summary>APPENDIX A: Python - Stack, Queue &amp; BST</summary>
+        <div class="code-block">"""
+critter_structures.py - CSC 249 Petri Dish 04
+Stack, Queue, and BST implementations.
+Run: python critter_structures.py
+"""
+
+class CritterData:
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+    def __str__(self):
+        return f"Critter #{self.id} (v={self.value})"
+
+
+# === STACK ===
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def push(self, item):
+        self.items.append(item)
+
+    def pop(self):
+        if self.is_empty():
+            raise IndexError("Pop from empty stack")
+        return self.items.pop()
+
+    def peek(self):
+        if self.is_empty():
+            raise IndexError("Peek on empty stack")
+        return self.items[-1]
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def size(self):
+        return len(self.items)
+
+
+# === QUEUE ===
+class Queue:
+    def __init__(self):
+        self.items = []
+
+    def enqueue(self, item):
+        self.items.append(item)
+
+    def dequeue(self):
+        if self.is_empty():
+            raise IndexError("Dequeue from empty queue")
+        return self.items.pop(0)
+
+    def front(self):
+        if self.is_empty():
+            raise IndexError("Front on empty queue")
+        return self.items[0]
+
+    def is_empty(self):
+        return len(self.items) == 0
+
+    def size(self):
+        return len(self.items)
+
+
+# === BST ===
+class BSTNode:
+    def __init__(self, critter):
+        self.critter = critter
+        self.left = None
+        self.right = None
+
+class BST:
+    def __init__(self):
+        self.root = None
+        self._size = 0
+
+    def insert(self, critter):
+        """Insert critter based on value. Returns comparison count."""
+        comps = 0
+        if self.root is None:
+            self.root = BSTNode(critter)
+            self._size += 1
+            return comps
+
+        current = self.root
+        while True:
+            comps += 1
+            if critter.value < current.critter.value:
+                if current.left is None:
+                    current.left = BSTNode(critter)
+                    self._size += 1
+                    return comps
+                current = current.left
+            else:
+                if current.right is None:
+                    current.right = BSTNode(critter)
+                    self._size += 1
+                    return comps
+                current = current.right
+
+    def search(self, target_value):
+        """Search for value. Returns (critter or None, comparisons)."""
+        comps = 0
+        current = self.root
+        while current is not None:
+            comps += 1
+            if target_value == current.critter.value:
+                return current.critter, comps
+            elif target_value < current.critter.value:
+                current = current.left
+            else:
+                current = current.right
+        return None, comps
+
+    def size(self):
+        return self._size
+
+    def inorder(self):
+        """Return critters in sorted order."""
+        result = []
+        self._inorder(self.root, result)
+        return result
+
+    def _inorder(self, node, result):
+        if node:
+            self._inorder(node.left, result)
+            result.append(node.critter)
+            self._inorder(node.right, result)
+
+
+# === DEMO ===
+if __name__ == "__main__":
+    import random
+
+    print("=" * 50)
+    print("STACK DEMO (LIFO)")
+    print("=" * 50)
+    stack = Stack()
+    critters = [CritterData(i, random.randint(1, 100)) for i in range(5)]
+    print("Pushing:", [str(c) for c in critters])
+    for c in critters:
+        stack.push(c)
+    print("Popping:")
+    while not stack.is_empty():
+        print(f"  {stack.pop()}")
+
+    print()
+    print("=" * 50)
+    print("QUEUE DEMO (FIFO)")
+    print("=" * 50)
+    queue = Queue()
+    print("Enqueueing:", [str(c) for c in critters])
+    for c in critters:
+        queue.enqueue(c)
+    print("Dequeueing:")
+    while not queue.is_empty():
+        print(f"  {queue.dequeue()}")
+
+    print()
+    print("=" * 50)
+    print("BST DEMO")
+    print("=" * 50)
+    bst = BST()
+    values = [50, 30, 70, 20, 40, 60, 80]
+    print(f"Inserting values: {values}")
+    for i, v in enumerate(values):
+        comps = bst.insert(CritterData(i, v))
+        print(f"  Insert {v}: {comps} comparisons")
+
+    print(f"\nInorder traversal: {[str(c) for c in bst.inorder()]}")
+
+    for target in [40, 60, 99]:
+        result, comps = bst.search(target)
+        print(f"Search {target}: {'FOUND ' + str(result) if result else 'NOT FOUND'} ({comps} comparisons)")
+
+    print()
+    print("DEGENERATE BST (sorted insert):")
+    bst2 = BST()
+    for i in range(1, 11):
+        comps = bst2.insert(CritterData(i, i * 10))
+        print(f"  Insert {i*10}: {comps} comparisons")
+    _, comps = bst2.search(100)
+    print(f"Search for 100: {comps} comparisons (should be ~10 = O(N)!)")</div>
+    </details>
+
+    <!-- C++ Appendix -->
+    <details>
+        <summary>APPENDIX B: C++ - Stack, Queue &amp; BST</summary>
+        <div class="code-block">// critter_structures.cpp - CSC 249 Petri Dish 04
+// Stack, Queue, and BST implementations.
+// Compile: g++ -std=c++17 -o critter_struct critter_structures.cpp
+// Run: ./critter_struct
+
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+
+struct CritterData {
+    int id;
+    int value;
+    std::string toString() const {
+        return "Critter #" + std::to_string(id) + " (v=" + std::to_string(value) + ")";
+    }
+};
+
+// === STACK ===
+class Stack {
+    std::vector&lt;CritterData&gt; items;
+public:
+    void push(CritterData item) { items.push_back(item); }
+    CritterData pop() {
+        if (isEmpty()) throw std::runtime_error("Pop from empty stack");
+        CritterData top = items.back();
+        items.pop_back();
+        return top;
+    }
+    CritterData peek() const {
+        if (isEmpty()) throw std::runtime_error("Peek on empty stack");
+        return items.back();
+    }
+    bool isEmpty() const { return items.empty(); }
+    int size() const { return items.size(); }
+};
+
+// === QUEUE ===
+class Queue {
+    std::vector&lt;CritterData&gt; items;
+public:
+    void enqueue(CritterData item) { items.push_back(item); }
+    CritterData dequeue() {
+        if (isEmpty()) throw std::runtime_error("Dequeue from empty queue");
+        CritterData front = items.front();
+        items.erase(items.begin());
+        return front;
+    }
+    CritterData front() const {
+        if (isEmpty()) throw std::runtime_error("Front on empty queue");
+        return items.front();
+    }
+    bool isEmpty() const { return items.empty(); }
+    int size() const { return items.size(); }
+};
+
+// === BST ===
+struct BSTNode {
+    CritterData critter;
+    BSTNode* left = nullptr;
+    BSTNode* right = nullptr;
+    BSTNode(CritterData c) : critter(c) {}
+};
+
+class BST {
+    BSTNode* root = nullptr;
+    int _size = 0;
+
+    void inorderHelper(BSTNode* node, std::vector&lt;CritterData&gt;&amp; result) {
+        if (!node) return;
+        inorderHelper(node-&gt;left, result);
+        result.push_back(node-&gt;critter);
+        inorderHelper(node-&gt;right, result);
+    }
+
+    void deleteTree(BSTNode* node) {
+        if (!node) return;
+        deleteTree(node-&gt;left);
+        deleteTree(node-&gt;right);
+        delete node;
+    }
+
+public:
+    ~BST() { deleteTree(root); }
+
+    int insert(CritterData critter) {
+        int comps = 0;
+        if (!root) { root = new BSTNode(critter); _size++; return comps; }
+        BSTNode* cur = root;
+        while (true) {
+            comps++;
+            if (critter.value &lt; cur-&gt;critter.value) {
+                if (!cur-&gt;left) { cur-&gt;left = new BSTNode(critter); _size++; return comps; }
+                cur = cur-&gt;left;
+            } else {
+                if (!cur-&gt;right) { cur-&gt;right = new BSTNode(critter); _size++; return comps; }
+                cur = cur-&gt;right;
+            }
+        }
+    }
+
+    std::pair&lt;bool, int&gt; search(int targetValue) {
+        int comps = 0;
+        BSTNode* cur = root;
+        while (cur) {
+            comps++;
+            if (targetValue == cur-&gt;critter.value) return {true, comps};
+            else if (targetValue &lt; cur-&gt;critter.value) cur = cur-&gt;left;
+            else cur = cur-&gt;right;
+        }
+        return {false, comps};
+    }
+
+    int size() const { return _size; }
+
+    std::vector&lt;CritterData&gt; inorder() {
+        std::vector&lt;CritterData&gt; result;
+        inorderHelper(root, result);
+        return result;
+    }
+};
+
+int main() {
+    srand(time(nullptr));
+
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "STACK DEMO (LIFO)" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    Stack stack;
+    for (int i = 0; i &lt; 5; i++) {
+        CritterData c{i, rand() % 100 + 1};
+        std::cout &lt;&lt; "Push: " &lt;&lt; c.toString() &lt;&lt; std::endl;
+        stack.push(c);
+    }
+    std::cout &lt;&lt; "Popping:" &lt;&lt; std::endl;
+    while (!stack.isEmpty()) {
+        std::cout &lt;&lt; "  " &lt;&lt; stack.pop().toString() &lt;&lt; std::endl;
+    }
+
+    std::cout &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "BST DEMO" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    BST bst;
+    int vals[] = {50, 30, 70, 20, 40, 60, 80};
+    for (int v : vals) {
+        int comps = bst.insert({0, v});
+        std::cout &lt;&lt; "Insert " &lt;&lt; v &lt;&lt; ": " &lt;&lt; comps &lt;&lt; " comparisons" &lt;&lt; std::endl;
+    }
+
+    for (int t : {40, 60, 99}) {
+        auto [found, comps] = bst.search(t);
+        std::cout &lt;&lt; "Search " &lt;&lt; t &lt;&lt; ": "
+                  &lt;&lt; (found ? "FOUND" : "NOT FOUND")
+                  &lt;&lt; " (" &lt;&lt; comps &lt;&lt; " comparisons)" &lt;&lt; std::endl;
+    }
+
+    std::cout &lt;&lt; std::endl &lt;&lt; "DEGENERATE BST (sorted insert):" &lt;&lt; std::endl;
+    BST bst2;
+    for (int i = 1; i &lt;= 10; i++) {
+        int comps = bst2.insert({i, i * 10});
+        std::cout &lt;&lt; "Insert " &lt;&lt; i*10 &lt;&lt; ": " &lt;&lt; comps &lt;&lt; " comparisons" &lt;&lt; std::endl;
+    }
+    auto [found, comps] = bst2.search(100);
+    std::cout &lt;&lt; "Search 100: " &lt;&lt; comps &lt;&lt; " comparisons (O(N)!)" &lt;&lt; std::endl;
+
+    return 0;
+}</div>
+    </details>
+
+    <script>
+    // ===================================================================
+    // PETRI DISH 04: ORGANIZATIONAL STRUCTURES
+    // CSC 249 - Stack, Queue, BST visualization
+    // ===================================================================
+
+    const VOID_BLACK   = [10, 10, 15];
+    const GRID_DARK    = [26, 26, 46];
+    const NEON_CYAN    = [0, 255, 245];
+    const NEON_MAGENTA = [255, 0, 255];
+    const NEON_GREEN   = [57, 255, 20];
+    const NEON_ORANGE  = [255, 102, 0];
+    const NEON_RED     = [255, 0, 64];
+    const TEXT_DIM     = [122, 122, 142];
+    const TEXT_BRIGHT  = [224, 224, 255];
+
+    const PW = 306; // Panel width
+    const PH = 300; // Panel height
+
+    // === INCOMING QUEUE ===
+    let incoming = [];
+    let nextId = 0;
+
+    // === STACK DATA ===
+    let stackItems = [];
+    let stackOps = 0;
+
+    // === QUEUE DATA ===
+    let queueItems = [];
+    let queueOps = 0;
+
+    // === BST DATA ===
+    let bstRoot = null;
+    let bstSize = 0;
+    let bstOps = 0;
+    let bstSearchPath = [];
+    let bstSearchTimer = 0;
+
+    // === P5 INSTANCES ===
+    let stackP5, queueP5, bstP5;
+
+    function setup() {
+        noCanvas(); // We use instance mode for the three panels
+        createStructCanvases();
+    }
+
+    function createStructCanvases() {
+        // Stack canvas
+        stackP5 = new p5(function(p) {
+            p.setup = function() {
+                let c = p.createCanvas(PW, PH);
+                c.parent('stack-canvas');
+            };
+            p.draw = function() { drawStack(p); };
+        });
+
+        // Queue canvas
+        queueP5 = new p5(function(p) {
+            p.setup = function() {
+                let c = p.createCanvas(PW, PH);
+                c.parent('queue-canvas');
+            };
+            p.draw = function() { drawQueue(p); };
+        });
+
+        // BST canvas
+        bstP5 = new p5(function(p) {
+            p.setup = function() {
+                let c = p.createCanvas(PW, PH);
+                c.parent('bst-canvas');
+            };
+            p.draw = function() { drawBST(p); };
+        });
+    }
+
+    // === DRAW STACK ===
+    function drawStack(p) {
+        p.background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        // Grid
+        p.stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        p.strokeWeight(0.5);
+        for (let x = 0; x < PW; x += 30) p.line(x, 0, x, PH);
+        for (let y = 0; y < PH; y += 30) p.line(0, y, PW, y);
+
+        if (stackItems.length === 0) {
+            p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+            p.noStroke();
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(10);
+            p.text('Empty stack\nPush to add', PW/2, PH/2);
+            return;
+        }
+
+        // Draw items stacking from bottom up
+        let boxW = 80;
+        let boxH = 28;
+        let baseY = PH - 20;
+        let centerX = PW / 2;
+
+        for (let i = 0; i < stackItems.length; i++) {
+            let item = stackItems[i];
+            let y = baseY - (i + 1) * (boxH + 4);
+
+            let isTop = (i === stackItems.length - 1);
+            let col = isTop ? NEON_CYAN : NEON_MAGENTA;
+
+            // Box
+            p.drawingContext.shadowBlur = isTop ? 15 : 5;
+            p.drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.4)`;
+
+            p.stroke(col[0], col[1], col[2], isTop ? 220 : 120);
+            p.strokeWeight(isTop ? 2 : 1);
+            p.noFill();
+            p.rect(centerX - boxW/2, y, boxW, boxH, 3);
+
+            // Polygon icon
+            p.drawingContext.shadowBlur = 0;
+            let sides = Math.floor(p.map(item.value, 0, 100, 3, 8));
+            let sz = 8;
+            p.push();
+            p.translate(centerX - boxW/2 + 16, y + boxH/2);
+            p.noFill();
+            p.stroke(col[0], col[1], col[2], 150);
+            p.strokeWeight(1);
+            p.beginShape();
+            for (let a = 0; a < p.TWO_PI; a += p.TWO_PI / sides) {
+                p.vertex(Math.cos(a) * sz, Math.sin(a) * sz);
+            }
+            p.endShape(p.CLOSE);
+            p.pop();
+
+            // Value text
+            p.noStroke();
+            p.fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2]);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(10);
+            p.text(`v=${item.value}`, centerX + 10, y + boxH/2);
+
+            // TOP label
+            if (isTop) {
+                p.fill(NEON_CYAN[0], NEON_CYAN[1], NEON_CYAN[2]);
+                p.textSize(8);
+                p.textAlign(p.LEFT, p.CENTER);
+                p.text('TOP', centerX + boxW/2 + 6, y + boxH/2);
+            }
+        }
+
+        // Arrow showing push/pop direction
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.noStroke();
+        p.textAlign(p.CENTER, p.TOP);
+        p.textSize(8);
+        p.text('PUSH/POP', centerX, 6);
+        p.stroke(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.strokeWeight(1);
+        let arrowY = 18;
+        p.line(centerX, arrowY, centerX, arrowY + 12);
+        p.line(centerX - 4, arrowY + 4, centerX, arrowY);
+        p.line(centerX + 4, arrowY + 4, centerX, arrowY);
+
+        // Scanlines
+        for (let y = 0; y < PH; y += 3) {
+            p.stroke(0, 0, 0, 6);
+            p.strokeWeight(1);
+            p.line(0, y, PW, y);
+        }
+    }
+
+    // === DRAW QUEUE ===
+    function drawQueue(p) {
+        p.background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        p.stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        p.strokeWeight(0.5);
+        for (let x = 0; x < PW; x += 30) p.line(x, 0, x, PH);
+        for (let y = 0; y < PH; y += 30) p.line(0, y, PW, y);
+
+        if (queueItems.length === 0) {
+            p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+            p.noStroke();
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(10);
+            p.text('Empty queue\nEnqueue to add', PW/2, PH/2);
+            return;
+        }
+
+        // Draw items in a horizontal line, wrapping to rows
+        let boxW = 50;
+        let boxH = 36;
+        let startX = 12;
+        let perRow = Math.floor((PW - 24) / (boxW + 6));
+        let centerY = PH / 2;
+
+        for (let i = 0; i < queueItems.length; i++) {
+            let item = queueItems[i];
+            let row = Math.floor(i / perRow);
+            let col_idx = i % perRow;
+            let x = startX + col_idx * (boxW + 6);
+            let y = 40 + row * (boxH + 10);
+
+            let isFront = (i === 0);
+            let isBack = (i === queueItems.length - 1);
+            let col = isFront ? NEON_GREEN : (isBack ? NEON_ORANGE : NEON_CYAN);
+
+            p.drawingContext.shadowBlur = (isFront || isBack) ? 12 : 4;
+            p.drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.3)`;
+
+            p.stroke(col[0], col[1], col[2], (isFront || isBack) ? 220 : 100);
+            p.strokeWeight((isFront || isBack) ? 2 : 1);
+            p.noFill();
+            p.rect(x, y, boxW, boxH, 3);
+
+            // Polygon icon
+            p.drawingContext.shadowBlur = 0;
+            let sides = Math.floor(p.map(item.value, 0, 100, 3, 8));
+            let sz = 7;
+            p.push();
+            p.translate(x + boxW/2, y + 12);
+            p.noFill();
+            p.stroke(col[0], col[1], col[2], 140);
+            p.strokeWeight(1);
+            p.beginShape();
+            for (let a = 0; a < p.TWO_PI; a += p.TWO_PI / sides) {
+                p.vertex(Math.cos(a) * sz, Math.sin(a) * sz);
+            }
+            p.endShape(p.CLOSE);
+            p.pop();
+
+            p.noStroke();
+            p.fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2]);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(9);
+            p.text(item.value, x + boxW/2, y + boxH - 8);
+
+            // Labels
+            if (isFront) {
+                p.fill(NEON_GREEN[0], NEON_GREEN[1], NEON_GREEN[2]);
+                p.textSize(7);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.text('FRONT', x + boxW/2, y - 2);
+            }
+            if (isBack) {
+                p.fill(NEON_ORANGE[0], NEON_ORANGE[1], NEON_ORANGE[2]);
+                p.textSize(7);
+                p.textAlign(p.CENTER, p.BOTTOM);
+                p.text('BACK', x + boxW/2, y - 2);
+            }
+        }
+
+        // Direction arrows
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.noStroke();
+        p.textSize(8);
+        p.textAlign(p.LEFT, p.BOTTOM);
+        p.text('DEQUEUE <-', 6, PH - 6);
+        p.textAlign(p.RIGHT, p.BOTTOM);
+        p.text('-> ENQUEUE', PW - 6, PH - 6);
+
+        for (let y = 0; y < PH; y += 3) {
+            p.stroke(0, 0, 0, 6);
+            p.strokeWeight(1);
+            p.line(0, y, PW, y);
+        }
+    }
+
+    // === DRAW BST ===
+    function drawBST(p) {
+        p.background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        p.stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        p.strokeWeight(0.5);
+        for (let x = 0; x < PW; x += 30) p.line(x, 0, x, PH);
+        for (let y = 0; y < PH; y += 30) p.line(0, y, PW, y);
+
+        if (!bstRoot) {
+            p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+            p.noStroke();
+            p.textAlign(p.CENTER, p.CENTER);
+            p.textSize(10);
+            p.text('Empty tree\nInsert to add', PW/2, PH/2);
+            return;
+        }
+
+        // Decrement search highlight timer
+        if (bstSearchTimer > 0) bstSearchTimer--;
+
+        // Calculate positions and draw
+        drawBSTNode(p, bstRoot, PW/2, 28, PW/4, 0);
+
+        for (let y = 0; y < PH; y += 3) {
+            p.stroke(0, 0, 0, 6);
+            p.strokeWeight(1);
+            p.line(0, y, PW, y);
+        }
+    }
+
+    function drawBSTNode(p, node, x, y, xOffset, depth) {
+        if (!node) return;
+        let nodeR = 16;
+
+        // Draw edges first
+        if (node.left) {
+            let cx = x - xOffset;
+            let cy = y + 50;
+            p.stroke(GRID_DARK[0] + 20, GRID_DARK[1] + 20, GRID_DARK[2] + 20);
+            p.strokeWeight(1);
+            p.line(x, y + nodeR, cx, cy - nodeR);
+            drawBSTNode(p, node.left, cx, cy, xOffset / 2, depth + 1);
+        }
+        if (node.right) {
+            let cx = x + xOffset;
+            let cy = y + 50;
+            p.stroke(GRID_DARK[0] + 20, GRID_DARK[1] + 20, GRID_DARK[2] + 20);
+            p.strokeWeight(1);
+            p.line(x, y + nodeR, cx, cy - nodeR);
+            drawBSTNode(p, node.right, cx, cy, xOffset / 2, depth + 1);
+        }
+
+        // Is this node on the search path?
+        let onPath = bstSearchTimer > 0 && bstSearchPath.includes(node.value);
+        let isTarget = bstSearchTimer > 0 && bstSearchPath.length > 0 &&
+                       bstSearchPath[bstSearchPath.length - 1] === node.value;
+
+        let col = isTarget ? NEON_MAGENTA : (onPath ? NEON_ORANGE : NEON_CYAN);
+
+        // Node circle
+        p.drawingContext.shadowBlur = onPath ? 15 : 6;
+        p.drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.4)`;
+
+        p.noFill();
+        p.stroke(col[0], col[1], col[2], onPath ? 240 : 140);
+        p.strokeWeight(onPath ? 2 : 1);
+        p.ellipse(x, y, nodeR * 2, nodeR * 2);
+
+        // Value
+        p.drawingContext.shadowBlur = 0;
+        p.noStroke();
+        p.fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2]);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(10);
+        p.text(node.value, x, y);
+
+        // Root label
+        if (depth === 0) {
+            p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+            p.textSize(7);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.text('ROOT', x, y - nodeR - 2);
+        }
+    }
+
+    // === BST INSERT (data structure) ===
+    function bstInsertNode(value) {
+        let newNode = { value: value, left: null, right: null };
+        let comps = 0;
+        if (!bstRoot) {
+            bstRoot = newNode;
+            bstSize++;
+            return comps;
+        }
+        let cur = bstRoot;
+        while (true) {
+            comps++;
+            if (value < cur.value) {
+                if (!cur.left) { cur.left = newNode; bstSize++; return comps; }
+                cur = cur.left;
+            } else {
+                if (!cur.right) { cur.right = newNode; bstSize++; return comps; }
+                cur = cur.right;
+            }
+        }
+    }
+
+    function bstSearchNode(targetValue) {
+        let comps = 0;
+        let path = [];
+        let cur = bstRoot;
+        while (cur) {
+            comps++;
+            path.push(cur.value);
+            if (targetValue === cur.value) return { found: true, comps, path };
+            else if (targetValue < cur.value) cur = cur.left;
+            else cur = cur.right;
+        }
+        return { found: false, comps, path };
+    }
+
+    // === CONTROL FUNCTIONS ===
+    function generateIncoming(n) {
+        incoming = [];
+        for (let i = 0; i < n; i++) {
+            incoming.push({ id: nextId++, value: Math.floor(Math.random() * 100) + 1 });
+        }
+        updateIncomingInfo();
+        enableButtons();
+    }
+
+    function insertSortedData() {
+        incoming = [];
+        for (let i = 1; i <= 10; i++) {
+            incoming.push({ id: nextId++, value: i * 10 });
+        }
+        updateIncomingInfo();
+        enableButtons();
+    }
+
+    function resetAll() {
+        incoming = [];
+        stackItems = [];
+        queueItems = [];
+        bstRoot = null;
+        bstSize = 0;
+        bstSearchPath = [];
+        bstSearchTimer = 0;
+        stackOps = 0;
+        queueOps = 0;
+        bstOps = 0;
+        updateAllUI();
+        enableButtons();
+    }
+
+    function updateIncomingInfo() {
+        let el = document.getElementById('incoming-info');
+        if (incoming.length === 0) {
+            el.textContent = 'No specimens queued';
+        } else {
+            let vals = incoming.slice(0, 5).map(i => i.value);
+            let more = incoming.length > 5 ? ` ... +${incoming.length - 5} more` : '';
+            el.textContent = `${incoming.length} queued: [${vals.join(', ')}${more}]`;
+        }
+    }
+
+    function enableButtons() {
+        let hasIncoming = incoming.length > 0;
+        document.getElementById('btn-stack-push').disabled = !hasIncoming;
+        document.getElementById('btn-stack-pop').disabled = stackItems.length === 0;
+        document.getElementById('btn-stack-peek').disabled = stackItems.length === 0;
+        document.getElementById('btn-queue-enq').disabled = !hasIncoming;
+        document.getElementById('btn-queue-deq').disabled = queueItems.length === 0;
+        document.getElementById('btn-queue-front').disabled = queueItems.length === 0;
+        document.getElementById('btn-bst-insert').disabled = !hasIncoming;
+        document.getElementById('btn-bst-search').disabled = bstSize === 0;
+    }
+
+    // === STACK OPERATIONS ===
+    function stackPush() {
+        if (incoming.length === 0) return;
+        let item = incoming.shift();
+        stackItems.push(item);
+        stackOps++;
+        document.getElementById('stack-status').textContent = `Pushed v=${item.value} (LIFO)`;
+        updateAllUI();
+    }
+
+    function stackPop() {
+        if (stackItems.length === 0) return;
+        let item = stackItems.pop();
+        stackOps++;
+        document.getElementById('stack-status').textContent = `Popped v=${item.value} (was on top)`;
+        updateAllUI();
+    }
+
+    function stackPeek() {
+        if (stackItems.length === 0) return;
+        let item = stackItems[stackItems.length - 1];
+        document.getElementById('stack-status').textContent = `Top = v=${item.value} (not removed)`;
+    }
+
+    // === QUEUE OPERATIONS ===
+    function queueEnqueue() {
+        if (incoming.length === 0) return;
+        let item = incoming.shift();
+        queueItems.push(item);
+        queueOps++;
+        document.getElementById('queue-status').textContent = `Enqueued v=${item.value} (to back)`;
+        updateAllUI();
+    }
+
+    function queueDequeue() {
+        if (queueItems.length === 0) return;
+        let item = queueItems.shift();
+        queueOps++;
+        document.getElementById('queue-status').textContent = `Dequeued v=${item.value} (was at front)`;
+        updateAllUI();
+    }
+
+    function queueFront() {
+        if (queueItems.length === 0) return;
+        let item = queueItems[0];
+        document.getElementById('queue-status').textContent = `Front = v=${item.value} (not removed)`;
+    }
+
+    // === BST OPERATIONS ===
+    function bstInsert() {
+        if (incoming.length === 0) return;
+        let item = incoming.shift();
+        let comps = bstInsertNode(item.value);
+        bstOps++;
+        document.getElementById('bst-status').textContent = `Inserted v=${item.value} (${comps} comparisons)`;
+        updateAllUI();
+    }
+
+    function bstSearchUI() {
+        let target = prompt('Search for value (0-100):');
+        if (target === null) return;
+        target = parseInt(target);
+        if (isNaN(target)) return;
+        let result = bstSearchNode(target);
+        bstSearchPath = result.path;
+        bstSearchTimer = 90; // frames to highlight
+        document.getElementById('bst-status').textContent =
+            `Search ${target}: ${result.found ? 'FOUND' : 'NOT FOUND'} (${result.comps} comps, path: [${result.path.join('->')}])`;
+    }
+
+    function updateAllUI() {
+        updateIncomingInfo();
+        document.getElementById('stack-ops').textContent = `size: ${stackItems.length}`;
+        document.getElementById('queue-ops').textContent = `size: ${queueItems.length}`;
+        document.getElementById('bst-ops').textContent = `size: ${bstSize}`;
+        enableButtons();
+    }
+    </script>
+</body>
+</html>

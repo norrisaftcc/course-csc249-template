@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Dish 02: Population Census | CSC 249</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e0e0ff;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #00fff5;
+            font-size: 24px;
+            margin-bottom: 4px;
+            text-shadow: 0 0 20px rgba(0,255,245,0.4);
+        }
+        .subtitle { color: #7a7a8e; font-size: 13px; margin-bottom: 16px; }
+        .memo {
+            max-width: 900px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-left: 3px solid #ff6600;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #a0a0c0;
+            box-shadow: 0 0 15px rgba(255,102,0,0.08);
+        }
+        .memo strong { color: #ff6600; }
+        .memo em { color: #00fff5; font-style: normal; }
+
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #canvas-container canvas {
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+        }
+        .side-panel {
+            width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .panel {
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 0 15px rgba(0,255,245,0.05);
+        }
+        .panel h3 {
+            color: #00fff5;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 3px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .metric-label { color: #7a7a8e; }
+        .metric-value { color: #39ff14; font-weight: bold; }
+        .metric-value.highlight { color: #ff00ff; }
+
+        .controls { display: flex; flex-direction: column; gap: 6px; }
+        button {
+            background: #1a1a2e;
+            color: #00fff5;
+            border: 1px solid #00fff5;
+            padding: 8px 14px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s;
+        }
+        button:hover {
+            background: #00fff5;
+            color: #0a0a0f;
+            box-shadow: 0 0 12px rgba(0,255,245,0.3);
+        }
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        button:disabled:hover {
+            background: #1a1a2e;
+            color: #00fff5;
+            box-shadow: none;
+        }
+        .input-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-size: 11px;
+        }
+        .input-row label { color: #7a7a8e; min-width: 25px; }
+        .input-row input {
+            background: #0a0a0f;
+            border: 1px solid #2a2a4a;
+            color: #39ff14;
+            padding: 4px 8px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px;
+            width: 60px;
+            border-radius: 2px;
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #7a7a8e;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+            accent-color: #00fff5;
+        }
+        .slider-val { color: #39ff14; min-width: 30px; text-align: right; }
+
+        .status-bar {
+            font-size: 11px;
+            color: #ff6600;
+            padding: 6px 0;
+            min-height: 20px;
+        }
+
+        #graph-container canvas {
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+        }
+
+        .explanation {
+            max-width: 900px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #a0a0c0;
+        }
+        .explanation h3 { color: #00fff5; margin-bottom: 8px; }
+        .explanation code {
+            background: #0a0a0f;
+            padding: 1px 5px;
+            border-radius: 2px;
+            color: #39ff14;
+            font-size: 11px;
+        }
+
+        details {
+            max-width: 900px;
+            width: 100%;
+            margin-top: 12px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+        }
+        summary {
+            padding: 10px 14px;
+            cursor: pointer;
+            color: #ff00ff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        summary:hover { color: #00fff5; }
+        .code-block {
+            background: #0a0a0f;
+            border-left: 3px solid #ff00ff;
+            padding: 12px;
+            margin: 8px 14px 14px;
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: #c0c0e0;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <h1>PETRI DISH 02: POPULATION CENSUS</h1>
+    <p class="subtitle">CSC 249 Module 2 &mdash; List Construction &amp; Linear Search</p>
+
+    <div class="memo">
+        <strong>MEMO &mdash; DEPARTMENT OF EFFICIENCY METRICS</strong><br><br>
+        Employee, The Algorithm requires a census of all specimens. You must:
+        (1) Construct a population registry (list) and measure the cost of doing so,
+        (2) Locate specific specimens by value using standard <em>linear search</em> protocol,
+        (3) Document the operational complexity of these procedures.
+        Efficiency is not optional.<br>
+        <em>&mdash; Department of Efficiency Metrics</em>
+    </div>
+
+    <div class="main-layout">
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div id="canvas-container"></div>
+            <div id="graph-container"></div>
+        </div>
+        <div class="side-panel">
+            <div class="panel">
+                <h3>Spawn Population</h3>
+                <div class="controls">
+                    <div class="input-row">
+                        <label>N =</label>
+                        <input type="number" id="input-n" value="20" min="1" max="100">
+                    </div>
+                    <button onclick="spawnPopulation()">Spawn Population</button>
+                    <button onclick="clearPopulation()">Clear Dish</button>
+                </div>
+                <div class="status-bar" id="spawn-status"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Linear Search</h3>
+                <div class="controls">
+                    <div class="input-row">
+                        <label>Find value:</label>
+                        <input type="number" id="input-search" value="50" min="0" max="100">
+                    </div>
+                    <button id="btn-search" onclick="startSearch()" disabled>Search</button>
+                    <div class="slider-row">
+                        <span>Speed</span>
+                        <input type="range" id="slider-anim" min="1" max="20" value="5">
+                        <span class="slider-val" id="val-anim">5</span>
+                    </div>
+                </div>
+                <div class="status-bar" id="search-status"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Metrics</h3>
+                <div id="metrics">
+                    <div class="metric-row"><span class="metric-label">Population (N)</span><span class="metric-value" id="m-pop">0</span></div>
+                    <div class="metric-row"><span class="metric-label">Build ops</span><span class="metric-value" id="m-build">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Search comparisons</span><span class="metric-value" id="m-comps">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Search result</span><span class="metric-value" id="m-result">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Total searches</span><span class="metric-value" id="m-total">0</span></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Experiment Log</h3>
+                <div id="experiment-log" style="font-size:10px;color:#7a7a8e;max-height:120px;overflow-y:auto;">
+                    Run experiments with different N values.<br>
+                    The graph below plots operations vs N.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>What You're Measuring</h3>
+        <p><strong>Building a list of N items</strong> takes N operations (one per item). That's <code>O(N)</code> -- linear time. Double N, double the work.</p>
+        <p><strong>Linear search</strong> checks each item one by one. Worst case: check all N items. Average case: N/2. Best case: 1 (found immediately). This is also <code>O(N)</code>.</p>
+        <p>Watch the comparison counter increment as each critter is checked. The orange flashes show each comparison. A magenta flash means "found it!" A red flash means "not found."</p>
+        <p><strong>The graph</strong> plots your experimental data. If it looks like a straight line, you've confirmed linear time complexity.</p>
+    </div>
+
+    <!-- Python Appendix -->
+    <details>
+        <summary>APPENDIX A: Python - List Building &amp; Linear Search</summary>
+        <div class="code-block">"""
+critter_census.py - CSC 249 Petri Dish 02
+List construction and linear search, measured.
+Run: python critter_census.py
+"""
+import random
+import time
+
+class CritterData:
+    """Data-only version of the visual Critter."""
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+
+    def __str__(self):
+        return f"Critter #{self.id} (value={self.value})"
+
+
+def build_population(n):
+    """Build a list of n CritterData objects.
+    Returns (list, operation_count)."""
+    population = []
+    ops = 0
+    for i in range(n):
+        value = random.randint(0, 100)
+        population.append(CritterData(i, value))
+        ops += 1  # Each append is one operation
+    return population, ops
+
+
+def linear_search(population, target_value):
+    """Search for target_value in population.
+    Returns (index or -1, comparison_count)."""
+    comparisons = 0
+    for i, critter in enumerate(population):
+        comparisons += 1
+        if critter.value == target_value:
+            return i, comparisons
+    return -1, comparisons
+
+
+# === EXPERIMENT RUNNER ===
+if __name__ == "__main__":
+    random.seed(42)
+
+    print("=" * 50)
+    print("LIST CONSTRUCTION: Operations vs N")
+    print("=" * 50)
+    print(f"{'N':>6}  {'Ops':>8}  {'Time(ms)':>10}")
+    print("-" * 30)
+
+    for n in [10, 20, 30, 40, 50, 100, 500, 1000]:
+        start = time.time()
+        pop, ops = build_population(n)
+        elapsed = (time.time() - start) * 1000
+        print(f"{n:>6}  {ops:>8}  {elapsed:>10.3f}")
+
+    print()
+    print("=" * 50)
+    print("LINEAR SEARCH: Comparisons vs N")
+    print("=" * 50)
+    print(f"{'N':>6}  {'Best':>6}  {'Worst':>6}  {'Avg(10 trials)':>15}")
+    print("-" * 40)
+
+    for n in [10, 20, 50, 100, 500, 1000]:
+        pop, _ = build_population(n)
+
+        # Best case: search for the first element's value
+        _, best = linear_search(pop, pop[0].value)
+
+        # Worst case: search for a value that doesn't exist
+        _, worst = linear_search(pop, -1)
+
+        # Average case: search for 10 random existing values
+        total_comps = 0
+        for _ in range(10):
+            target = random.choice(pop).value
+            _, comps = linear_search(pop, target)
+            total_comps += comps
+        avg = total_comps / 10
+
+        print(f"{n:>6}  {best:>6}  {worst:>6}  {avg:>15.1f}")
+
+    # TODO: Add your own experiments here
+    # Try: What happens to average comparisons as N grows?
+    # Try: Plot the results (optional, use matplotlib if available)</div>
+    </details>
+
+    <!-- C++ Appendix -->
+    <details>
+        <summary>APPENDIX B: C++ - List Building &amp; Linear Search</summary>
+        <div class="code-block">// critter_census.cpp - CSC 249 Petri Dish 02
+// List construction and linear search, measured.
+// Compile: g++ -o critter_census critter_census.cpp
+// Run: ./critter_census
+
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+#include &lt;chrono&gt;
+#include &lt;iomanip&gt;
+
+struct CritterData {
+    int id;
+    int value;
+
+    std::string toString() const {
+        return "Critter #" + std::to_string(id)
+             + " (value=" + std::to_string(value) + ")";
+    }
+};
+
+// Build a list of n CritterData. Returns operation count.
+int buildPopulation(std::vector&lt;CritterData&gt;&amp; population, int n) {
+    population.clear();
+    int ops = 0;
+    for (int i = 0; i &lt; n; i++) {
+        CritterData c;
+        c.id = i;
+        c.value = rand() % 101;
+        population.push_back(c);
+        ops++;  // Each push_back is one operation
+    }
+    return ops;
+}
+
+// Linear search. Returns comparison count. Sets foundIndex to index or -1.
+int linearSearch(const std::vector&lt;CritterData&gt;&amp; pop, int targetValue, int&amp; foundIndex) {
+    int comparisons = 0;
+    foundIndex = -1;
+    for (int i = 0; i &lt; (int)pop.size(); i++) {
+        comparisons++;
+        if (pop[i].value == targetValue) {
+            foundIndex = i;
+            return comparisons;
+        }
+    }
+    return comparisons;
+}
+
+int main() {
+    srand(time(nullptr));
+
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "LIST CONSTRUCTION: Operations vs N" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::setw(6) &lt;&lt; "N"
+              &lt;&lt; std::setw(8) &lt;&lt; "Ops"
+              &lt;&lt; std::setw(12) &lt;&lt; "Time(ms)" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(30, '-') &lt;&lt; std::endl;
+
+    int sizes[] = {10, 20, 30, 40, 50, 100, 500, 1000};
+    for (int n : sizes) {
+        std::vector&lt;CritterData&gt; pop;
+        auto start = std::chrono::high_resolution_clock::now();
+        int ops = buildPopulation(pop, n);
+        auto end = std::chrono::high_resolution_clock::now();
+        double elapsed = std::chrono::duration&lt;double, std::milli&gt;(end - start).count();
+        std::cout &lt;&lt; std::setw(6) &lt;&lt; n
+                  &lt;&lt; std::setw(8) &lt;&lt; ops
+                  &lt;&lt; std::setw(12) &lt;&lt; std::fixed &lt;&lt; std::setprecision(3) &lt;&lt; elapsed
+                  &lt;&lt; std::endl;
+    }
+
+    std::cout &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "LINEAR SEARCH: Comparisons vs N" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(50, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::setw(6) &lt;&lt; "N"
+              &lt;&lt; std::setw(8) &lt;&lt; "Best"
+              &lt;&lt; std::setw(8) &lt;&lt; "Worst"
+              &lt;&lt; std::setw(16) &lt;&lt; "Avg(10)" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(40, '-') &lt;&lt; std::endl;
+
+    for (int n : sizes) {
+        std::vector&lt;CritterData&gt; pop;
+        buildPopulation(pop, n);
+        int idx;
+
+        // Best case: first element
+        int best = linearSearch(pop, pop[0].value, idx);
+
+        // Worst case: value not in list
+        int worst = linearSearch(pop, -1, idx);
+
+        // Average: 10 random searches
+        int totalComps = 0;
+        for (int t = 0; t &lt; 10; t++) {
+            int target = pop[rand() % n].value;
+            totalComps += linearSearch(pop, target, idx);
+        }
+        double avg = totalComps / 10.0;
+
+        std::cout &lt;&lt; std::setw(6) &lt;&lt; n
+                  &lt;&lt; std::setw(8) &lt;&lt; best
+                  &lt;&lt; std::setw(8) &lt;&lt; worst
+                  &lt;&lt; std::setw(16) &lt;&lt; std::fixed &lt;&lt; std::setprecision(1) &lt;&lt; avg
+                  &lt;&lt; std::endl;
+    }
+
+    // TODO: Add your own experiments
+    // Try: What happens to average comparisons as N grows?
+    return 0;
+}</div>
+    </details>
+
+    <script>
+    // ===================================================================
+    // PETRI DISH 02: POPULATION CENSUS
+    // CSC 249 - List building and linear search visualization
+    // ===================================================================
+
+    // === THEME CONSTANTS ===
+    const VOID_BLACK   = [10, 10, 15];
+    const GRID_DARK    = [26, 26, 46];
+    const NEON_CYAN    = [0, 255, 245];
+    const NEON_MAGENTA = [255, 0, 255];
+    const NEON_GREEN   = [57, 255, 20];
+    const NEON_ORANGE  = [255, 102, 0];
+    const NEON_RED     = [255, 0, 64];
+    const TEXT_DIM     = [122, 122, 142];
+    const TEXT_BRIGHT  = [224, 224, 255];
+
+    const CANVAS_W = 580;
+    const CANVAS_H = 380;
+    const GRAPH_W = 580;
+    const GRAPH_H = 180;
+
+    // === CRITTER CLASS (same as Petri Dish 01) ===
+    class Critter {
+        constructor(id, value) {
+            this.id = id;
+            this.value = value;
+            this.pos = createVector(random(30, CANVAS_W - 30), random(30, CANVAS_H - 30));
+            this.vel = createVector(random(-1, 1), random(-1, 1));
+            this.acc = createVector(0, 0);
+            this.maxSpeed = 1.5;
+            this.maxForce = 0.03;
+            this.size = map(value, 0, 100, 8, 22);
+            this.sides = floor(map(value, 0, 100, 3, 8));
+            this.highlightColor = null;
+            this.highlightTimer = 0;
+        }
+
+        applyForce(f) { this.acc.add(f); }
+
+        wander() {
+            let w = p5.Vector.random2D();
+            w.mult(this.maxForce * 0.3);
+            this.applyForce(w);
+        }
+
+        separate(others) {
+            let sep = this.size * 1.8;
+            let steer = createVector(0, 0);
+            let count = 0;
+            for (let o of others) {
+                if (o === this) continue;
+                let d = p5.Vector.dist(this.pos, o.pos);
+                if (d > 0 && d < sep) {
+                    let diff = p5.Vector.sub(this.pos, o.pos);
+                    diff.normalize().div(d);
+                    steer.add(diff);
+                    count++;
+                }
+            }
+            if (count > 0) {
+                steer.div(count).setMag(this.maxSpeed).sub(this.vel).limit(this.maxForce);
+                this.applyForce(steer);
+            }
+        }
+
+        update() {
+            this.vel.add(this.acc).limit(this.maxSpeed);
+            this.pos.add(this.vel);
+            this.acc.mult(0);
+            if (this.highlightTimer > 0) this.highlightTimer--;
+            else this.highlightColor = null;
+        }
+
+        edges() {
+            if (this.pos.x > CANVAS_W) this.pos.x = 0;
+            if (this.pos.x < 0) this.pos.x = CANVAS_W;
+            if (this.pos.y > CANVAS_H) this.pos.y = 0;
+            if (this.pos.y < 0) this.pos.y = CANVAS_H;
+        }
+
+        highlight(col, duration) {
+            this.highlightColor = col;
+            this.highlightTimer = duration || 30;
+        }
+
+        display() {
+            push();
+            translate(this.pos.x, this.pos.y);
+            rotate(this.vel.heading());
+
+            let col = this.highlightColor || NEON_CYAN;
+            let glow = this.highlightColor ? 25 : 12;
+            drawingContext.shadowBlur = glow;
+            drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.5)`;
+
+            noFill();
+            stroke(col[0], col[1], col[2], 200);
+            strokeWeight(this.highlightColor ? 2.5 : 1.2);
+            beginShape();
+            for (let a = 0; a < TWO_PI; a += TWO_PI / this.sides) {
+                vertex(cos(a) * this.size, sin(a) * this.size);
+            }
+            endShape(CLOSE);
+
+            fill(col[0], col[1], col[2], 15);
+            noStroke();
+            beginShape();
+            for (let a = 0; a < TWO_PI; a += TWO_PI / this.sides) {
+                vertex(cos(a) * this.size * 0.6, sin(a) * this.size * 0.6);
+            }
+            endShape(CLOSE);
+
+            drawingContext.shadowBlur = 0;
+            fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2], 160);
+            textAlign(CENTER, CENTER);
+            textSize(7);
+            text(this.value, 0, 0);
+            pop();
+        }
+    }
+
+    // === GLOBAL STATE ===
+    let critters = [];
+    let nextId = 0;
+    let buildOps = 0;
+    let totalSearches = 0;
+
+    // Search animation state
+    let searching = false;
+    let searchTarget = -1;
+    let searchIndex = 0;
+    let searchComparisons = 0;
+    let searchFound = -1;
+    let searchDone = false;
+    let searchFrameDelay = 5;
+
+    // Experiment data for graph
+    let experiments = []; // {n, buildOps, searchComps}
+
+    // Graph sketch
+    let graphSketch;
+
+    // === P5.JS SETUP ===
+    function setup() {
+        let canvas = createCanvas(CANVAS_W, CANVAS_H);
+        canvas.parent('canvas-container');
+        frameRate(30);
+        textFont('Courier New');
+    }
+
+    // === P5.JS DRAW ===
+    function draw() {
+        background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        // Grid
+        stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        strokeWeight(0.5);
+        for (let x = 0; x < CANVAS_W; x += 40) line(x, 0, x, CANVAS_H);
+        for (let y = 0; y < CANVAS_H; y += 40) line(0, y, CANVAS_W, y);
+
+        // Animation speed
+        searchFrameDelay = 21 - parseInt(document.getElementById('slider-anim').value);
+        document.getElementById('val-anim').textContent = document.getElementById('slider-anim').value;
+
+        // Update critters
+        for (let c of critters) {
+            c.wander();
+            c.separate(critters);
+            c.update();
+            c.edges();
+        }
+
+        // Search animation step
+        if (searching && !searchDone && frameCount % searchFrameDelay === 0) {
+            stepSearch();
+        }
+
+        // Draw critters
+        for (let c of critters) {
+            c.display();
+        }
+
+        // Scanlines
+        for (let y = 0; y < CANVAS_H; y += 3) {
+            stroke(0, 0, 0, 8);
+            strokeWeight(1);
+            line(0, y, CANVAS_W, y);
+        }
+
+        // HUD overlay
+        drawingContext.shadowBlur = 0;
+        fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        noStroke();
+        textAlign(LEFT, TOP);
+        textSize(10);
+        text(`N = ${critters.length}`, 8, 8);
+        if (searching) {
+            fill(NEON_ORANGE[0], NEON_ORANGE[1], NEON_ORANGE[2]);
+            text(`Searching for value ${searchTarget}...  comparisons: ${searchComparisons}`, 8, 22);
+        }
+    }
+
+    // === SEARCH STEP ===
+    function stepSearch() {
+        if (searchIndex >= critters.length) {
+            // Not found
+            searchDone = true;
+            searchFound = -1;
+            document.getElementById('search-status').textContent = `NOT FOUND (${searchComparisons} comparisons)`;
+            document.getElementById('m-comps').textContent = searchComparisons;
+            document.getElementById('m-result').textContent = 'Not found';
+            document.getElementById('m-result').className = 'metric-value';
+            // Flash all red briefly
+            for (let c of critters) c.highlight(NEON_RED, 20);
+            searching = false;
+            document.getElementById('btn-search').disabled = false;
+            logExperiment('search', critters.length, searchComparisons, false);
+            return;
+        }
+
+        let c = critters[searchIndex];
+        searchComparisons++;
+        document.getElementById('m-comps').textContent = searchComparisons;
+
+        if (c.value === searchTarget) {
+            // Found!
+            c.highlight(NEON_MAGENTA, 120);
+            searchFound = searchIndex;
+            searchDone = true;
+            searching = false;
+            document.getElementById('search-status').textContent =
+                `FOUND at index ${searchIndex} (${searchComparisons} comparisons)`;
+            document.getElementById('m-result').textContent = `Found at [${searchIndex}]`;
+            document.getElementById('m-result').className = 'metric-value highlight';
+            document.getElementById('btn-search').disabled = false;
+            logExperiment('search', critters.length, searchComparisons, true);
+        } else {
+            // Not this one -- flash orange
+            c.highlight(NEON_ORANGE, 8);
+            searchIndex++;
+        }
+    }
+
+    // === CONTROL FUNCTIONS ===
+    function spawnPopulation() {
+        let n = parseInt(document.getElementById('input-n').value) || 20;
+        n = Math.min(Math.max(n, 1), 100);
+
+        critters = [];
+        nextId = 0;
+        buildOps = 0;
+
+        // Animate spawning: add one per frame for visual effect
+        // But count operations immediately
+        for (let i = 0; i < n; i++) {
+            let value = floor(random(0, 101));
+            critters.push(new Critter(nextId++, value));
+            buildOps++;
+        }
+
+        document.getElementById('m-pop').textContent = n;
+        document.getElementById('m-build').textContent = buildOps;
+        document.getElementById('spawn-status').textContent = `Spawned ${n} specimens (${buildOps} operations)`;
+        document.getElementById('btn-search').disabled = false;
+
+        // Reset search state
+        searching = false;
+        searchDone = false;
+        document.getElementById('m-comps').textContent = '--';
+        document.getElementById('m-result').textContent = '--';
+        document.getElementById('search-status').textContent = '';
+
+        logExperiment('build', n, buildOps, null);
+    }
+
+    function clearPopulation() {
+        critters = [];
+        nextId = 0;
+        buildOps = 0;
+        searching = false;
+        searchDone = false;
+        document.getElementById('m-pop').textContent = '0';
+        document.getElementById('m-build').textContent = '--';
+        document.getElementById('m-comps').textContent = '--';
+        document.getElementById('m-result').textContent = '--';
+        document.getElementById('spawn-status').textContent = '';
+        document.getElementById('search-status').textContent = '';
+        document.getElementById('btn-search').disabled = true;
+    }
+
+    function startSearch() {
+        if (critters.length === 0) return;
+
+        let target = parseInt(document.getElementById('input-search').value);
+        if (isNaN(target)) target = 50;
+
+        // Reset highlights
+        for (let c of critters) {
+            c.highlightColor = null;
+            c.highlightTimer = 0;
+        }
+
+        searchTarget = target;
+        searchIndex = 0;
+        searchComparisons = 0;
+        searchFound = -1;
+        searchDone = false;
+        searching = true;
+        totalSearches++;
+        document.getElementById('m-total').textContent = totalSearches;
+        document.getElementById('search-status').textContent = `Searching for ${target}...`;
+        document.getElementById('m-comps').textContent = '0';
+        document.getElementById('m-result').textContent = 'searching...';
+        document.getElementById('btn-search').disabled = true;
+    }
+
+    // === EXPERIMENT LOG ===
+    function logExperiment(type, n, ops, found) {
+        let log = document.getElementById('experiment-log');
+        let entry = '';
+        if (type === 'build') {
+            entry = `BUILD N=${n}: ${ops} ops`;
+            experiments.push({ n: n, type: 'build', ops: ops });
+        } else {
+            entry = `SEARCH N=${n}: ${ops} comps (${found ? 'found' : 'not found'})`;
+            experiments.push({ n: n, type: 'search', ops: ops });
+        }
+        log.innerHTML += `<br>${entry}`;
+        log.scrollTop = log.scrollHeight;
+
+        // Redraw graph
+        drawGraph();
+    }
+
+    // === GRAPH ===
+    // We use a second p5 instance for the ops-vs-N graph
+    let graphP5;
+
+    function drawGraph() {
+        if (!graphP5) {
+            graphP5 = new p5(function(p) {
+                p.setup = function() {
+                    let c = p.createCanvas(GRAPH_W, GRAPH_H);
+                    c.parent('graph-container');
+                    p.noLoop();
+                };
+                p.draw = function() { renderGraph(p); };
+            });
+        } else {
+            graphP5.redraw();
+        }
+    }
+
+    function renderGraph(p) {
+        p.background(10, 10, 15);
+
+        // Grid
+        p.stroke(26, 26, 46);
+        p.strokeWeight(0.5);
+        for (let x = 0; x < GRAPH_W; x += 40) p.line(x, 0, x, GRAPH_H);
+        for (let y = 0; y < GRAPH_H; y += 30) p.line(0, y, GRAPH_W, y);
+
+        // Axes labels
+        p.fill(122, 122, 142);
+        p.noStroke();
+        p.textSize(9);
+        p.textAlign(CENTER, TOP);
+        p.text('N (population size)', GRAPH_W / 2, GRAPH_H - 14);
+        p.push();
+        p.translate(12, GRAPH_H / 2);
+        p.rotate(-HALF_PI);
+        p.text('Operations', 0, 0);
+        p.pop();
+
+        p.textAlign(LEFT, TOP);
+        p.textSize(10);
+        p.fill(0, 255, 245);
+        p.text('Operations vs N', 30, 6);
+
+        if (experiments.length === 0) {
+            p.fill(122, 122, 142);
+            p.textAlign(CENTER, CENTER);
+            p.text('Run experiments to see data here', GRAPH_W / 2, GRAPH_H / 2);
+            return;
+        }
+
+        // Find ranges
+        let maxN = 0, maxOps = 0;
+        for (let e of experiments) {
+            if (e.n > maxN) maxN = e.n;
+            if (e.ops > maxOps) maxOps = e.ops;
+        }
+        maxN = Math.max(maxN, 10);
+        maxOps = Math.max(maxOps, 10);
+
+        let padL = 40, padR = 20, padT = 24, padB = 24;
+        let plotW = GRAPH_W - padL - padR;
+        let plotH = GRAPH_H - padT - padB;
+
+        // Axis ticks
+        p.fill(122, 122, 142);
+        p.textSize(8);
+        p.textAlign(RIGHT, CENTER);
+        for (let i = 0; i <= 4; i++) {
+            let val = Math.round(maxOps * i / 4);
+            let y = padT + plotH - (plotH * i / 4);
+            p.text(val, padL - 4, y);
+            p.stroke(26, 26, 46);
+            p.strokeWeight(0.3);
+            p.line(padL, y, padL + plotW, y);
+        }
+        p.textAlign(CENTER, TOP);
+        for (let i = 0; i <= 4; i++) {
+            let val = Math.round(maxN * i / 4);
+            let x = padL + (plotW * i / 4);
+            p.text(val, x, padT + plotH + 4);
+        }
+
+        // Plot points
+        for (let e of experiments) {
+            let x = padL + (e.n / maxN) * plotW;
+            let y = padT + plotH - (e.ops / maxOps) * plotH;
+
+            if (e.type === 'build') {
+                p.fill(57, 255, 20);
+                p.noStroke();
+                p.ellipse(x, y, 7, 7);
+            } else {
+                p.fill(255, 102, 0);
+                p.noStroke();
+                p.rect(x - 3, y - 3, 6, 6);
+            }
+        }
+
+        // Legend
+        p.noStroke();
+        p.fill(57, 255, 20);
+        p.ellipse(GRAPH_W - 120, 10, 6, 6);
+        p.fill(122, 122, 142);
+        p.textAlign(LEFT, CENTER);
+        p.textSize(8);
+        p.text('Build ops', GRAPH_W - 112, 10);
+
+        p.fill(255, 102, 0);
+        p.rect(GRAPH_W - 63, 7, 5, 5);
+        p.fill(122, 122, 142);
+        p.text('Search', GRAPH_W - 55, 10);
+    }
+
+    // Initial graph draw on load
+    setTimeout(drawGraph, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+# Module 01: Petri Dish 01 - Specimen Alpha Grading Rubric
+# Total: 100 points
+
+assignment:
+  name: "Petri Dish 01: Specimen Alpha"
+  module: "M01"
+  series: "Petri Dish 1 of 4"
+  total_points: 100
+
+criteria:
+  - name: "Part A: Observation"
+    points: 20
+    subcriteria:
+      - name: "Property inventory"
+        points: 8
+        levels:
+          - score: 8
+            description: "All properties listed with accurate one-sentence descriptions"
+          - score: 6
+            description: "Most properties listed, descriptions mostly accurate"
+          - score: 4
+            description: "Some properties listed, partial descriptions"
+          - score: 0
+            description: "Missing or incorrect"
+
+      - name: "Speed experiment"
+        points: 6
+        levels:
+          - score: 6
+            description: "Correctly describes behavior at speed 0 and 5, explains maxSpeed role in update()"
+          - score: 4
+            description: "Describes behavior but explanation of update() is incomplete"
+          - score: 2
+            description: "Basic observation without code-level explanation"
+          - score: 0
+            description: "Missing or incorrect"
+
+      - name: "Value mapping identification"
+        points: 6
+        levels:
+          - score: 6
+            description: "Identifies both size and sides as mapped to value, explains relationship"
+          - score: 4
+            description: "Identifies one mapping correctly"
+          - score: 2
+            description: "Vague or partially correct"
+          - score: 0
+            description: "Missing or incorrect"
+
+  - name: "Part B: Modification"
+    points: 40
+    subcriteria:
+      - name: "Energy property implementation"
+        points: 10
+        levels:
+          - score: 10
+            description: "Energy decreases per frame, wraps at 0, initialized at 100"
+          - score: 7
+            description: "Energy decreases but wrapping or initialization has issues"
+          - score: 4
+            description: "Energy property exists but behavior is incorrect"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Glow maps to energy"
+        points: 10
+        levels:
+          - score: 10
+            description: "Glow brightness clearly varies with energy level"
+          - score: 7
+            description: "Some visual change with energy but mapping is unclear"
+          - score: 3
+            description: "Attempted but not visually effective"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Feed button"
+        points: 8
+        levels:
+          - score: 8
+            description: "Button works, resets energy on selected critter only"
+          - score: 5
+            description: "Button works but has edge case issues (no selection check)"
+          - score: 2
+            description: "Button exists but does not function correctly"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Trail enhancement"
+        points: 12
+        levels:
+          - score: 12
+            description: "Trail has thickness gradient and uses correct color (cyan/magenta)"
+          - score: 9
+            description: "Trail has thickness gradient OR correct color, not both"
+          - score: 5
+            description: "Some trail improvement attempted"
+          - score: 0
+            description: "Trail unchanged from starter code"
+
+  - name: "Part C: Appendix Translation"
+    points: 40
+    subcriteria:
+      - name: "Size and sides derived from value"
+        points: 10
+        levels:
+          - score: 10
+            description: "Both properties calculated correctly in constructor, values in expected ranges"
+          - score: 7
+            description: "Both properties exist but mapping is slightly off"
+          - score: 4
+            description: "One property implemented correctly"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "setValue updates derived properties"
+        points: 10
+        levels:
+          - score: 10
+            description: "Setting value recalculates size and sides, value is clamped 0-100"
+          - score: 7
+            description: "Derived properties update but clamping is missing"
+          - score: 4
+            description: "Value changes but derived properties do not update"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "update() method"
+        points: 15
+        levels:
+          - score: 15
+            description: "Speed limiting, position update, and edge wrapping all correct"
+          - score: 11
+            description: "Two of three features correct"
+          - score: 7
+            description: "One feature correct"
+          - score: 3
+            description: "Attempted but fundamentally incorrect"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Program runs with correct output"
+        points: 5
+        levels:
+          - score: 5
+            description: "Compiles/runs, output shows value change and position change"
+          - score: 3
+            description: "Runs but output is incomplete"
+          - score: 0
+            description: "Does not compile/run"
