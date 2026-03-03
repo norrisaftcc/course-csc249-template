@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Dish 03: Classification Protocol | CSC 249</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e0e0ff;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #00fff5; font-size: 24px; margin-bottom: 4px; text-shadow: 0 0 20px rgba(0,255,245,0.4); }
+        .subtitle { color: #7a7a8e; font-size: 13px; margin-bottom: 16px; }
+        .memo {
+            max-width: 900px; background: #12121e; border: 1px solid #2a2a4a;
+            border-left: 3px solid #39ff14; padding: 14px 18px; margin-bottom: 16px;
+            font-size: 12px; line-height: 1.6; color: #a0a0c0;
+            box-shadow: 0 0 15px rgba(57,255,20,0.08);
+        }
+        .memo strong { color: #39ff14; }
+        .memo em { color: #00fff5; font-style: normal; }
+        .main-layout { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+        #canvas-container canvas { border: 1px solid #2a2a4a; border-radius: 4px; }
+        .side-panel { width: 280px; display: flex; flex-direction: column; gap: 12px; }
+        .panel {
+            background: #12121e; border: 1px solid #2a2a4a; border-radius: 4px;
+            padding: 12px; box-shadow: 0 0 15px rgba(0,255,245,0.05);
+        }
+        .panel h3 { color: #00fff5; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .metric-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; border-bottom: 1px solid #1a1a2e; }
+        .metric-label { color: #7a7a8e; }
+        .metric-value { color: #39ff14; font-weight: bold; }
+        .metric-value.highlight { color: #ff00ff; }
+        .metric-value.warn { color: #ff6600; }
+        .controls { display: flex; flex-direction: column; gap: 6px; }
+        button {
+            background: #1a1a2e; color: #00fff5; border: 1px solid #00fff5;
+            padding: 8px 14px; font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px; cursor: pointer; border-radius: 3px; transition: all 0.15s;
+        }
+        button:hover { background: #00fff5; color: #0a0a0f; box-shadow: 0 0 12px rgba(0,255,245,0.3); }
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+        button:disabled:hover { background: #1a1a2e; color: #00fff5; box-shadow: none; }
+        .input-row { display: flex; gap: 6px; align-items: center; font-size: 11px; }
+        .input-row label { color: #7a7a8e; min-width: 25px; }
+        .input-row input[type="number"] {
+            background: #0a0a0f; border: 1px solid #2a2a4a; color: #39ff14;
+            padding: 4px 8px; font-family: 'Courier New', Consolas, monospace; font-size: 12px;
+            width: 60px; border-radius: 2px;
+        }
+        .slider-row { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #7a7a8e; }
+        .slider-row input[type="range"] { flex: 1; accent-color: #00fff5; }
+        .slider-val { color: #39ff14; min-width: 30px; text-align: right; }
+        .status-bar { font-size: 11px; color: #ff6600; padding: 6px 0; min-height: 20px; }
+        .explanation {
+            max-width: 900px; background: #12121e; border: 1px solid #2a2a4a;
+            border-radius: 4px; padding: 16px; margin-top: 16px;
+            font-size: 12px; line-height: 1.7; color: #a0a0c0;
+        }
+        .explanation h3 { color: #00fff5; margin-bottom: 8px; }
+        .explanation code { background: #0a0a0f; padding: 1px 5px; border-radius: 2px; color: #39ff14; font-size: 11px; }
+        details {
+            max-width: 900px; width: 100%; margin-top: 12px;
+            background: #12121e; border: 1px solid #2a2a4a; border-radius: 4px;
+        }
+        summary { padding: 10px 14px; cursor: pointer; color: #ff00ff; font-size: 13px; font-weight: bold; }
+        summary:hover { color: #00fff5; }
+        .code-block {
+            background: #0a0a0f; border-left: 3px solid #ff00ff; padding: 12px;
+            margin: 8px 14px 14px; font-size: 11px; line-height: 1.5;
+            overflow-x: auto; color: #c0c0e0; white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <h1>PETRI DISH 03: CLASSIFICATION PROTOCOL</h1>
+    <p class="subtitle">CSC 249 Module 3 &mdash; Sorting &amp; Efficient Search</p>
+
+    <div class="memo">
+        <strong>MEMO &mdash; DEPARTMENT OF CITIZEN CLASSIFICATION</strong><br><br>
+        Employee, The unsorted population registry is unacceptable. The Algorithm demands ORDER.
+        You will: (1) Apply <em>Selection Sort</em> to organize specimens by value,
+        (2) Observe the O(N&sup2;) cost of imposing order,
+        (3) Once sorted, apply <em>Binary Search</em> and observe the dramatic improvement.
+        Order has a cost, but it pays dividends.<br>
+        <em>&mdash; Department of Citizen Classification</em>
+    </div>
+
+    <div class="main-layout">
+        <div id="canvas-container"></div>
+        <div class="side-panel">
+            <div class="panel">
+                <h3>Population</h3>
+                <div class="controls">
+                    <div class="input-row">
+                        <label>N =</label>
+                        <input type="number" id="input-n" value="20" min="5" max="50">
+                    </div>
+                    <button onclick="spawnPopulation()">Spawn Unsorted</button>
+                </div>
+                <div class="status-bar" id="spawn-status"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Sort</h3>
+                <div class="controls">
+                    <button id="btn-sort" onclick="startSort()" disabled>Selection Sort</button>
+                    <div class="slider-row">
+                        <span>Speed</span>
+                        <input type="range" id="slider-speed" min="1" max="20" value="8">
+                        <span class="slider-val" id="val-speed">8</span>
+                    </div>
+                </div>
+                <div class="status-bar" id="sort-status"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Search (after sorting)</h3>
+                <div class="controls">
+                    <div class="input-row">
+                        <label>Find:</label>
+                        <input type="number" id="input-search" value="50" min="0" max="100">
+                    </div>
+                    <button id="btn-linear" onclick="startLinearSearch()" disabled>Linear Search</button>
+                    <button id="btn-binary" onclick="startBinarySearch()" disabled>Binary Search</button>
+                </div>
+                <div class="status-bar" id="search-status"></div>
+            </div>
+
+            <div class="panel">
+                <h3>Metrics</h3>
+                <div id="metrics">
+                    <div class="metric-row"><span class="metric-label">Population (N)</span><span class="metric-value" id="m-pop">0</span></div>
+                    <div class="metric-row"><span class="metric-label">Sorted?</span><span class="metric-value" id="m-sorted">No</span></div>
+                    <div class="metric-row"><span class="metric-label">Sort comparisons</span><span class="metric-value" id="m-sort-comps">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Sort swaps</span><span class="metric-value" id="m-sort-swaps">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Linear search comps</span><span class="metric-value" id="m-lin-comps">--</span></div>
+                    <div class="metric-row"><span class="metric-label">Binary search comps</span><span class="metric-value" id="m-bin-comps">--</span></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Comparison</h3>
+                <div id="comparison-panel" style="font-size:10px;color:#7a7a8e;">
+                    Sort the population, then try both search types to compare.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>What You're Seeing</h3>
+        <p><strong>Selection Sort</strong> scans the unsorted region for the minimum value, then swaps it into position.
+        Each scan is the inner loop (orange flashes). The swap is the magenta flash. This takes N*(N-1)/2 comparisons: <code>O(N&sup2;)</code>.</p>
+        <p><strong>After sorting</strong>, the critters line up left-to-right by value in a neat row at the bottom.</p>
+        <p><strong>Binary Search</strong> only works on sorted data. It checks the middle, then discards half the remaining items.
+        Each step halves the search space (dimmed critters are eliminated). This takes ~log&sub2;(N) comparisons: <code>O(log N)</code>.</p>
+        <p>For N=50: Linear search needs up to 50 comparisons. Binary search needs at most 6. That's the power of sorting + binary search.</p>
+    </div>
+
+    <!-- Python Appendix -->
+    <details>
+        <summary>APPENDIX A: Python - Selection Sort &amp; Binary Search</summary>
+        <div class="code-block">"""
+critter_classification.py - CSC 249 Petri Dish 03
+Selection sort and binary search, measured.
+Run: python critter_classification.py
+"""
+import random
+import time
+
+class CritterData:
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+    def __str__(self):
+        return f"Critter #{self.id} (value={self.value})"
+
+
+def selection_sort(population):
+    """Sort population by value using selection sort.
+    Returns (comparisons, swaps)."""
+    comparisons = 0
+    swaps = 0
+    n = len(population)
+    for i in range(n - 1):
+        min_idx = i
+        for j in range(i + 1, n):
+            comparisons += 1
+            if population[j].value < population[min_idx].value:
+                min_idx = j
+        if min_idx != i:
+            population[i], population[min_idx] = population[min_idx], population[i]
+            swaps += 1
+    return comparisons, swaps
+
+
+def linear_search(population, target_value):
+    """Linear search. Returns (index or -1, comparisons)."""
+    comparisons = 0
+    for i, critter in enumerate(population):
+        comparisons += 1
+        if critter.value == target_value:
+            return i, comparisons
+    return -1, comparisons
+
+
+def binary_search(sorted_pop, target_value):
+    """Binary search on sorted population.
+    Returns (index or -1, comparisons)."""
+    comparisons = 0
+    low, high = 0, len(sorted_pop) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        comparisons += 1
+        if sorted_pop[mid].value == target_value:
+            return mid, comparisons
+        elif sorted_pop[mid].value < target_value:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1, comparisons
+
+
+# === EXPERIMENTS ===
+if __name__ == "__main__":
+    random.seed(42)
+
+    print("=" * 55)
+    print("SELECTION SORT: Comparisons vs N")
+    print("=" * 55)
+    print(f"{'N':>6}  {'Comps':>8}  {'Swaps':>6}  {'N*(N-1)/2':>10}  {'Time(ms)':>10}")
+    print("-" * 48)
+
+    for n in [10, 20, 30, 40, 50]:
+        pop = [CritterData(i, random.randint(0, 100)) for i in range(n)]
+        start = time.time()
+        comps, swaps = selection_sort(pop)
+        elapsed = (time.time() - start) * 1000
+        expected = n * (n - 1) // 2
+        print(f"{n:>6}  {comps:>8}  {swaps:>6}  {expected:>10}  {elapsed:>10.3f}")
+
+    print()
+    print("=" * 55)
+    print("LINEAR vs BINARY SEARCH (on sorted data)")
+    print("=" * 55)
+    print(f"{'N':>6}  {'Linear(worst)':>14}  {'Binary(worst)':>14}  {'log2(N)':>8}")
+    print("-" * 48)
+
+    import math
+    for n in [10, 20, 50, 100, 500, 1000]:
+        pop = [CritterData(i, i) for i in range(n)]  # sorted 0..n-1
+        _, lin_comps = linear_search(pop, -1)  # worst case
+        _, bin_comps = binary_search(pop, -1)   # worst case
+        log_n = math.ceil(math.log2(n)) if n > 0 else 0
+        print(f"{n:>6}  {lin_comps:>14}  {bin_comps:>14}  {log_n:>8}")
+
+    # TODO: Try insertion sort and compare to selection sort
+    # TODO: Test binary search on nearly-sorted vs fully-sorted data</div>
+    </details>
+
+    <!-- C++ Appendix -->
+    <details>
+        <summary>APPENDIX B: C++ - Selection Sort &amp; Binary Search</summary>
+        <div class="code-block">// critter_classification.cpp - CSC 249 Petri Dish 03
+// Selection sort and binary search, measured.
+// Compile: g++ -o critter_class critter_classification.cpp
+// Run: ./critter_class
+
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+#include &lt;chrono&gt;
+#include &lt;iomanip&gt;
+#include &lt;cmath&gt;
+
+struct CritterData {
+    int id;
+    int value;
+};
+
+// Selection sort. Returns {comparisons, swaps}.
+std::pair&lt;int,int&gt; selectionSort(std::vector&lt;CritterData&gt;&amp; pop) {
+    int comps = 0, swaps = 0;
+    int n = pop.size();
+    for (int i = 0; i &lt; n - 1; i++) {
+        int minIdx = i;
+        for (int j = i + 1; j &lt; n; j++) {
+            comps++;
+            if (pop[j].value &lt; pop[minIdx].value) {
+                minIdx = j;
+            }
+        }
+        if (minIdx != i) {
+            std::swap(pop[i], pop[minIdx]);
+            swaps++;
+        }
+    }
+    return {comps, swaps};
+}
+
+// Linear search. Returns {index (-1 if not found), comparisons}.
+std::pair&lt;int,int&gt; linearSearch(const std::vector&lt;CritterData&gt;&amp; pop, int target) {
+    int comps = 0;
+    for (int i = 0; i &lt; (int)pop.size(); i++) {
+        comps++;
+        if (pop[i].value == target) return {i, comps};
+    }
+    return {-1, comps};
+}
+
+// Binary search. Returns {index (-1 if not found), comparisons}.
+std::pair&lt;int,int&gt; binarySearch(const std::vector&lt;CritterData&gt;&amp; pop, int target) {
+    int comps = 0;
+    int low = 0, high = (int)pop.size() - 1;
+    while (low &lt;= high) {
+        int mid = (low + high) / 2;
+        comps++;
+        if (pop[mid].value == target) return {mid, comps};
+        else if (pop[mid].value &lt; target) low = mid + 1;
+        else high = mid - 1;
+    }
+    return {-1, comps};
+}
+
+int main() {
+    srand(time(nullptr));
+
+    std::cout &lt;&lt; std::string(55, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "SELECTION SORT: Comparisons vs N" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(55, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::setw(6) &lt;&lt; "N" &lt;&lt; std::setw(10) &lt;&lt; "Comps"
+              &lt;&lt; std::setw(8) &lt;&lt; "Swaps" &lt;&lt; std::setw(12) &lt;&lt; "N*(N-1)/2" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(40, '-') &lt;&lt; std::endl;
+
+    int sizes[] = {10, 20, 30, 40, 50};
+    for (int n : sizes) {
+        std::vector&lt;CritterData&gt; pop;
+        for (int i = 0; i &lt; n; i++) pop.push_back({i, rand() % 101});
+        auto [comps, swaps] = selectionSort(pop);
+        int expected = n * (n - 1) / 2;
+        std::cout &lt;&lt; std::setw(6) &lt;&lt; n &lt;&lt; std::setw(10) &lt;&lt; comps
+                  &lt;&lt; std::setw(8) &lt;&lt; swaps &lt;&lt; std::setw(12) &lt;&lt; expected &lt;&lt; std::endl;
+    }
+
+    std::cout &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(55, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; "LINEAR vs BINARY SEARCH" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(55, '=') &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::setw(6) &lt;&lt; "N" &lt;&lt; std::setw(16) &lt;&lt; "Linear(worst)"
+              &lt;&lt; std::setw(16) &lt;&lt; "Binary(worst)" &lt;&lt; std::setw(10) &lt;&lt; "log2(N)" &lt;&lt; std::endl;
+    std::cout &lt;&lt; std::string(48, '-') &lt;&lt; std::endl;
+
+    int searchSizes[] = {10, 20, 50, 100, 500, 1000};
+    for (int n : searchSizes) {
+        std::vector&lt;CritterData&gt; pop;
+        for (int i = 0; i &lt; n; i++) pop.push_back({i, i});
+        auto [li, lc] = linearSearch(pop, -1);
+        auto [bi, bc] = binarySearch(pop, -1);
+        int logN = (int)ceil(log2(n));
+        std::cout &lt;&lt; std::setw(6) &lt;&lt; n &lt;&lt; std::setw(16) &lt;&lt; lc
+                  &lt;&lt; std::setw(16) &lt;&lt; bc &lt;&lt; std::setw(10) &lt;&lt; logN &lt;&lt; std::endl;
+    }
+
+    // TODO: Implement insertion sort and compare
+    return 0;
+}</div>
+    </details>
+
+    <script>
+    // ===================================================================
+    // PETRI DISH 03: CLASSIFICATION PROTOCOL
+    // CSC 249 - Sorting visualization + binary search
+    // ===================================================================
+
+    const VOID_BLACK   = [10, 10, 15];
+    const GRID_DARK    = [26, 26, 46];
+    const NEON_CYAN    = [0, 255, 245];
+    const NEON_MAGENTA = [255, 0, 255];
+    const NEON_GREEN   = [57, 255, 20];
+    const NEON_ORANGE  = [255, 102, 0];
+    const NEON_RED     = [255, 0, 64];
+    const TEXT_DIM     = [122, 122, 142];
+    const TEXT_BRIGHT  = [224, 224, 255];
+
+    const CANVAS_W = 600;
+    const CANVAS_H = 500;
+
+    // Sorted row position
+    const SORTED_Y = CANVAS_H - 50;
+
+    // === CRITTER CLASS ===
+    class Critter {
+        constructor(id, value) {
+            this.id = id;
+            this.value = value;
+            this.pos = createVector(random(30, CANVAS_W - 30), random(30, CANVAS_H - 120));
+            this.vel = createVector(random(-0.5, 0.5), random(-0.5, 0.5));
+            this.acc = createVector(0, 0);
+            this.maxSpeed = 1;
+            this.maxForce = 0.02;
+            this.size = map(value, 0, 100, 8, 20);
+            this.sides = floor(map(value, 0, 100, 3, 8));
+            this.targetPos = null;
+            this.highlightColor = null;
+            this.highlightTimer = 0;
+            this.dimmed = false;
+            this.sorted = false;
+        }
+
+        applyForce(f) { this.acc.add(f); }
+
+        wander() {
+            if (this.sorted || this.targetPos) return;
+            let w = p5.Vector.random2D().mult(this.maxForce * 0.2);
+            this.applyForce(w);
+        }
+
+        separate(others) {
+            if (this.sorted) return;
+            let sep = this.size * 1.5;
+            let steer = createVector(0, 0);
+            let count = 0;
+            for (let o of others) {
+                if (o === this) continue;
+                let d = p5.Vector.dist(this.pos, o.pos);
+                if (d > 0 && d < sep) {
+                    let diff = p5.Vector.sub(this.pos, o.pos).normalize().div(d);
+                    steer.add(diff);
+                    count++;
+                }
+            }
+            if (count > 0) {
+                steer.div(count).setMag(this.maxSpeed).sub(this.vel).limit(this.maxForce);
+                this.applyForce(steer);
+            }
+        }
+
+        update() {
+            if (this.targetPos) {
+                // Animate toward target
+                let desired = p5.Vector.sub(this.targetPos, this.pos);
+                let d = desired.mag();
+                if (d < 2) {
+                    this.pos = this.targetPos.copy();
+                    this.targetPos = null;
+                    this.vel.mult(0);
+                } else {
+                    desired.setMag(min(d * 0.15, 8));
+                    this.vel = desired;
+                }
+            } else {
+                this.vel.add(this.acc).limit(this.maxSpeed);
+            }
+            this.pos.add(this.vel);
+            this.acc.mult(0);
+
+            if (this.highlightTimer > 0) this.highlightTimer--;
+            else this.highlightColor = null;
+
+            // Wrap only if not sorted
+            if (!this.sorted && !this.targetPos) {
+                if (this.pos.x > CANVAS_W) this.pos.x = 0;
+                if (this.pos.x < 0) this.pos.x = CANVAS_W;
+                if (this.pos.y > CANVAS_H - 80) this.pos.y = 30;
+                if (this.pos.y < 0) this.pos.y = CANVAS_H - 80;
+            }
+        }
+
+        highlight(col, dur) { this.highlightColor = col; this.highlightTimer = dur || 20; }
+
+        display() {
+            push();
+            translate(this.pos.x, this.pos.y);
+            if (!this.sorted) rotate(this.vel.heading());
+
+            let col = this.highlightColor || NEON_CYAN;
+            let alpha = this.dimmed ? 40 : 200;
+            let glow = this.highlightColor ? 20 : (this.dimmed ? 3 : 10);
+
+            drawingContext.shadowBlur = glow;
+            drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.4)`;
+
+            noFill();
+            stroke(col[0], col[1], col[2], alpha);
+            strokeWeight(this.highlightColor ? 2.5 : 1.2);
+            beginShape();
+            for (let a = 0; a < TWO_PI; a += TWO_PI / this.sides) {
+                vertex(cos(a) * this.size, sin(a) * this.size);
+            }
+            endShape(CLOSE);
+
+            drawingContext.shadowBlur = 0;
+            fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2], this.dimmed ? 40 : 160);
+            textAlign(CENTER, CENTER);
+            textSize(7);
+            text(this.value, 0, 0);
+            pop();
+        }
+    }
+
+    // === STATE ===
+    let critters = [];
+    let isSorted = false;
+    let animSpeed = 8;
+
+    // Sort state machine
+    let sorting = false;
+    let sortI = 0, sortJ = 0, sortMinIdx = 0;
+    let sortComparisons = 0, sortSwaps = 0;
+    let sortPhase = 'idle'; // 'scanning', 'swapping', 'done'
+
+    // Search state
+    let searching = false;
+    let searchType = ''; // 'linear' or 'binary'
+    let searchTarget = 0;
+
+    // Linear search state
+    let linIndex = 0, linComps = 0;
+
+    // Binary search state
+    let binLow = 0, binHigh = 0, binMid = 0, binComps = 0;
+
+    // === P5 ===
+    function setup() {
+        let c = createCanvas(CANVAS_W, CANVAS_H);
+        c.parent('canvas-container');
+        frameRate(30);
+        textFont('Courier New');
+    }
+
+    function draw() {
+        background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        // Grid
+        stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        strokeWeight(0.5);
+        for (let x = 0; x < CANVAS_W; x += 40) line(x, 0, x, CANVAS_H);
+        for (let y = 0; y < CANVAS_H; y += 40) line(0, y, CANVAS_W, y);
+
+        // Sorted row divider
+        if (critters.length > 0) {
+            stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2], 80);
+            strokeWeight(1);
+            let divY = CANVAS_H - 80;
+            line(0, divY, CANVAS_W, divY);
+            noStroke();
+            fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], 60);
+            textSize(9);
+            textAlign(LEFT, TOP);
+            text('SORTED POSITIONS', 8, divY + 4);
+        }
+
+        animSpeed = 21 - parseInt(document.getElementById('slider-speed').value);
+        document.getElementById('val-speed').textContent = document.getElementById('slider-speed').value;
+
+        // Sort animation step
+        if (sorting && frameCount % Math.max(1, animSpeed) === 0) {
+            stepSort();
+        }
+
+        // Search animation step
+        if (searching && frameCount % Math.max(1, animSpeed) === 0) {
+            if (searchType === 'linear') stepLinearSearch();
+            else if (searchType === 'binary') stepBinarySearch();
+        }
+
+        // Update & draw
+        for (let c of critters) {
+            c.wander();
+            c.separate(critters);
+            c.update();
+            c.display();
+        }
+
+        // Scanlines
+        for (let y = 0; y < CANVAS_H; y += 3) {
+            stroke(0, 0, 0, 8);
+            strokeWeight(1);
+            line(0, y, CANVAS_W, y);
+        }
+
+        // HUD
+        drawingContext.shadowBlur = 0;
+        fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        noStroke();
+        textAlign(LEFT, TOP);
+        textSize(10);
+        text(`N = ${critters.length}  |  ${isSorted ? 'SORTED' : 'UNSORTED'}`, 8, 8);
+        if (sorting) {
+            fill(NEON_ORANGE[0], NEON_ORANGE[1], NEON_ORANGE[2]);
+            text(`Sorting... comps: ${sortComparisons}  swaps: ${sortSwaps}`, 8, 22);
+        }
+    }
+
+    // === SORT STATE MACHINE ===
+    function stepSort() {
+        let n = critters.length;
+
+        if (sortI >= n - 1) {
+            // Done
+            sorting = false;
+            isSorted = true;
+            document.getElementById('m-sorted').textContent = 'Yes';
+            document.getElementById('m-sorted').className = 'metric-value highlight';
+            document.getElementById('sort-status').textContent =
+                `Done! ${sortComparisons} comparisons, ${sortSwaps} swaps`;
+            document.getElementById('btn-sort').disabled = true;
+            document.getElementById('btn-linear').disabled = false;
+            document.getElementById('btn-binary').disabled = false;
+            // Finalize positions
+            for (let i = 0; i < n; i++) {
+                critters[i].sorted = true;
+            }
+            return;
+        }
+
+        if (sortPhase === 'idle' || sortPhase === 'scanning') {
+            if (sortJ < n) {
+                // Compare
+                sortComparisons++;
+                document.getElementById('m-sort-comps').textContent = sortComparisons;
+                critters[sortJ].highlight(NEON_ORANGE, 4);
+                if (critters[sortJ].value < critters[sortMinIdx].value) {
+                    sortMinIdx = sortJ;
+                    critters[sortMinIdx].highlight(NEON_MAGENTA, 8);
+                }
+                sortJ++;
+                sortPhase = 'scanning';
+            } else {
+                // Inner loop done -- do swap
+                if (sortMinIdx !== sortI) {
+                    // Swap in array
+                    let temp = critters[sortI];
+                    critters[sortI] = critters[sortMinIdx];
+                    critters[sortMinIdx] = temp;
+                    sortSwaps++;
+                    document.getElementById('m-sort-swaps').textContent = sortSwaps;
+                }
+                // Move critter to sorted position
+                let xPos = map(sortI, 0, n - 1, 30, CANVAS_W - 30);
+                critters[sortI].targetPos = createVector(xPos, SORTED_Y);
+                critters[sortI].highlight(NEON_GREEN, 15);
+                critters[sortI].sorted = true;
+
+                // Next outer iteration
+                sortI++;
+                sortJ = sortI + 1;
+                sortMinIdx = sortI;
+                sortPhase = 'idle';
+
+                // Last element
+                if (sortI === n - 1) {
+                    let xPos = map(sortI, 0, n - 1, 30, CANVAS_W - 30);
+                    critters[sortI].targetPos = createVector(xPos, SORTED_Y);
+                    critters[sortI].sorted = true;
+                }
+            }
+        }
+    }
+
+    // === LINEAR SEARCH (on sorted row) ===
+    function stepLinearSearch() {
+        if (linIndex >= critters.length) {
+            searching = false;
+            document.getElementById('search-status').textContent =
+                `Linear: NOT FOUND (${linComps} comparisons)`;
+            document.getElementById('m-lin-comps').textContent = linComps;
+            for (let c of critters) c.highlight(NEON_RED, 15);
+            enableSearchButtons();
+            updateComparison();
+            return;
+        }
+
+        let c = critters[linIndex];
+        linComps++;
+        document.getElementById('m-lin-comps').textContent = linComps;
+
+        if (c.value === searchTarget) {
+            c.highlight(NEON_MAGENTA, 120);
+            searching = false;
+            document.getElementById('search-status').textContent =
+                `Linear: FOUND at [${linIndex}] (${linComps} comparisons)`;
+            enableSearchButtons();
+            updateComparison();
+        } else {
+            c.highlight(NEON_ORANGE, 6);
+            linIndex++;
+        }
+    }
+
+    // === BINARY SEARCH (on sorted row) ===
+    function stepBinarySearch() {
+        if (binLow > binHigh) {
+            searching = false;
+            document.getElementById('search-status').textContent =
+                `Binary: NOT FOUND (${binComps} comparisons)`;
+            document.getElementById('m-bin-comps').textContent = binComps;
+            enableSearchButtons();
+            updateComparison();
+            return;
+        }
+
+        binMid = floor((binLow + binHigh) / 2);
+        binComps++;
+        document.getElementById('m-bin-comps').textContent = binComps;
+
+        let c = critters[binMid];
+        c.highlight(NEON_CYAN, 12);
+
+        if (c.value === searchTarget) {
+            c.highlight(NEON_MAGENTA, 120);
+            searching = false;
+            document.getElementById('search-status').textContent =
+                `Binary: FOUND at [${binMid}] (${binComps} comparisons)`;
+            enableSearchButtons();
+            updateComparison();
+        } else if (c.value < searchTarget) {
+            // Dim the left half
+            for (let i = binLow; i <= binMid; i++) {
+                critters[i].dimmed = true;
+                critters[i].highlight(NEON_RED, 6);
+            }
+            binLow = binMid + 1;
+        } else {
+            // Dim the right half
+            for (let i = binMid; i <= binHigh; i++) {
+                critters[i].dimmed = true;
+                critters[i].highlight(NEON_RED, 6);
+            }
+            binHigh = binMid - 1;
+        }
+    }
+
+    // === CONTROLS ===
+    function spawnPopulation() {
+        let n = parseInt(document.getElementById('input-n').value) || 20;
+        n = Math.min(Math.max(n, 5), 50);
+
+        critters = [];
+        isSorted = false;
+        sorting = false;
+        searching = false;
+
+        for (let i = 0; i < n; i++) {
+            critters.push(new Critter(i, floor(random(0, 101))));
+        }
+
+        document.getElementById('m-pop').textContent = n;
+        document.getElementById('m-sorted').textContent = 'No';
+        document.getElementById('m-sorted').className = 'metric-value';
+        document.getElementById('m-sort-comps').textContent = '--';
+        document.getElementById('m-sort-swaps').textContent = '--';
+        document.getElementById('m-lin-comps').textContent = '--';
+        document.getElementById('m-bin-comps').textContent = '--';
+        document.getElementById('spawn-status').textContent = `Spawned ${n} unsorted specimens`;
+        document.getElementById('sort-status').textContent = '';
+        document.getElementById('search-status').textContent = '';
+        document.getElementById('btn-sort').disabled = false;
+        document.getElementById('btn-linear').disabled = true;
+        document.getElementById('btn-binary').disabled = true;
+        document.getElementById('comparison-panel').innerHTML = 'Sort the population, then try both search types to compare.';
+    }
+
+    function startSort() {
+        if (critters.length === 0 || isSorted) return;
+        sorting = true;
+        sortI = 0;
+        sortJ = 1;
+        sortMinIdx = 0;
+        sortComparisons = 0;
+        sortSwaps = 0;
+        sortPhase = 'idle';
+        document.getElementById('sort-status').textContent = 'Sorting...';
+        document.getElementById('btn-sort').disabled = true;
+    }
+
+    function startLinearSearch() {
+        if (!isSorted || critters.length === 0) return;
+        resetSearchHighlights();
+        searchType = 'linear';
+        searchTarget = parseInt(document.getElementById('input-search').value) || 50;
+        linIndex = 0;
+        linComps = 0;
+        searching = true;
+        document.getElementById('search-status').textContent = `Linear searching for ${searchTarget}...`;
+        disableSearchButtons();
+    }
+
+    function startBinarySearch() {
+        if (!isSorted || critters.length === 0) return;
+        resetSearchHighlights();
+        searchType = 'binary';
+        searchTarget = parseInt(document.getElementById('input-search').value) || 50;
+        binLow = 0;
+        binHigh = critters.length - 1;
+        binComps = 0;
+        searching = true;
+        document.getElementById('search-status').textContent = `Binary searching for ${searchTarget}...`;
+        disableSearchButtons();
+    }
+
+    function resetSearchHighlights() {
+        for (let c of critters) {
+            c.highlightColor = null;
+            c.highlightTimer = 0;
+            c.dimmed = false;
+        }
+    }
+
+    function disableSearchButtons() {
+        document.getElementById('btn-linear').disabled = true;
+        document.getElementById('btn-binary').disabled = true;
+    }
+
+    function enableSearchButtons() {
+        document.getElementById('btn-linear').disabled = false;
+        document.getElementById('btn-binary').disabled = false;
+    }
+
+    function updateComparison() {
+        let linC = document.getElementById('m-lin-comps').textContent;
+        let binC = document.getElementById('m-bin-comps').textContent;
+        if (linC !== '--' && binC !== '--') {
+            let l = parseInt(linC), b = parseInt(binC);
+            let ratio = l > 0 ? (l / b).toFixed(1) : '?';
+            document.getElementById('comparison-panel').innerHTML =
+                `Linear: <span style="color:#ff6600">${l}</span> comparisons<br>` +
+                `Binary: <span style="color:#00fff5">${b}</span> comparisons<br>` +
+                `Binary was <span style="color:#39ff14">${ratio}x faster</span>`;
+        }
+    }
+    </script>
+</body>
+</html>

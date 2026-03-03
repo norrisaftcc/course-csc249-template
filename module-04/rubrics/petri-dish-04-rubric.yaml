@@ -1,0 +1,165 @@
+# Module 04: Petri Dish 04 - Organizational Structures Grading Rubric
+# Total: 100 points
+
+assignment:
+  name: "Petri Dish 04: Organizational Structures"
+  module: "M04"
+  series: "Petri Dish 4 of 4"
+  total_points: 100
+
+criteria:
+  - name: "Part A: Stack Operations"
+    points: 20
+    subcriteria:
+      - name: "Push/pop order data"
+        points: 5
+        levels:
+          - score: 5
+            description: "Push and pop orders recorded correctly, LIFO demonstrated"
+          - score: 3
+            description: "Data partially recorded"
+          - score: 0
+            description: "Missing"
+
+      - name: "LIFO explanation and Big-O"
+        points: 10
+        levels:
+          - score: 10
+            description: "LIFO clearly explained in own words, correct push/pop ordering described"
+          - score: 7
+            description: "Explanation is correct but lacks clarity"
+          - score: 3
+            description: "Partially correct"
+          - score: 0
+            description: "Missing or incorrect"
+
+      - name: "Big-O and real-world example"
+        points: 5
+        levels:
+          - score: 5
+            description: "O(1) for push/pop correctly explained, original real-world example given"
+          - score: 3
+            description: "Big-O correct but example is weak or reused from class"
+          - score: 0
+            description: "Missing or incorrect"
+
+  - name: "Part B: Queue Operations"
+    points: 20
+    subcriteria:
+      - name: "Enqueue/dequeue order data"
+        points: 5
+        levels:
+          - score: 5
+            description: "Orders recorded correctly, FIFO demonstrated"
+          - score: 3
+            description: "Partially recorded"
+          - score: 0
+            description: "Missing"
+
+      - name: "FIFO explanation and contrast"
+        points: 10
+        levels:
+          - score: 10
+            description: "FIFO clearly explained, explicit contrast with LIFO"
+          - score: 7
+            description: "Explanation correct but contrast is vague"
+          - score: 3
+            description: "Partial understanding"
+          - score: 0
+            description: "Missing or incorrect"
+
+      - name: "A/B/C ordering and real-world example"
+        points: 5
+        levels:
+          - score: 5
+            description: "Stack gives C,B,A and Queue gives A,B,C -- both correct with example"
+          - score: 3
+            description: "One ordering correct"
+          - score: 0
+            description: "Both incorrect or missing"
+
+  - name: "Part C: BST Operations"
+    points: 30
+    subcriteria:
+      - name: "Random tree search data"
+        points: 5
+        levels:
+          - score: 5
+            description: "3 searches recorded with comparison counts"
+          - score: 3
+            description: "Partial data"
+          - score: 0
+            description: "Missing"
+
+      - name: "Comparisons and tree height analysis"
+        points: 10
+        levels:
+          - score: 10
+            description: "Correctly connects search comparisons to tree height, explains O(log N) for balanced"
+          - score: 7
+            description: "Connection identified but explanation incomplete"
+          - score: 3
+            description: "Data present but analysis weak"
+          - score: 0
+            description: "Missing"
+
+      - name: "Degenerate tree analysis"
+        points: 10
+        levels:
+          - score: 10
+            description: "Identifies degenerate tree as linked list, explains O(N) search with correct comparison count"
+          - score: 7
+            description: "Identifies the problem but explanation is incomplete"
+          - score: 3
+            description: "Some understanding shown"
+          - score: 0
+            description: "Missing"
+
+      - name: "Balanced tree sketch"
+        points: 5
+        levels:
+          - score: 5
+            description: "Correct balanced BST sketch with comparison analysis"
+          - score: 3
+            description: "Sketch present but analysis incomplete"
+          - score: 0
+            description: "Missing"
+
+  - name: "Part D: Appendix Translation"
+    points: 30
+    subcriteria:
+      - name: "Stack implementation"
+        points: 10
+        levels:
+          - score: 10
+            description: "All 5 operations (push, pop, peek, isEmpty, size) work correctly"
+          - score: 7
+            description: "4 operations work"
+          - score: 4
+            description: "Basic push/pop work"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "Queue implementation"
+        points: 10
+        levels:
+          - score: 10
+            description: "All 5 operations (enqueue, dequeue, front, isEmpty, size) work correctly"
+          - score: 7
+            description: "4 operations work"
+          - score: 4
+            description: "Basic enqueue/dequeue work"
+          - score: 0
+            description: "Not implemented"
+
+      - name: "BST implementation"
+        points: 10
+        levels:
+          - score: 10
+            description: "Insert and search work correctly, return accurate comparison counts"
+          - score: 7
+            description: "Both work but counts are wrong"
+          - score: 4
+            description: "Insert works, search broken (or vice versa)"
+          - score: 0
+            description: "Not implemented"
