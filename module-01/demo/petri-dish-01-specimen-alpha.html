@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Dish 01: Specimen Alpha | CSC 249</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e0e0ff;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #00fff5;
+            font-size: 24px;
+            margin-bottom: 4px;
+            text-shadow: 0 0 20px rgba(0,255,245,0.4);
+        }
+        .subtitle {
+            color: #7a7a8e;
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        .memo {
+            max-width: 820px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-left: 3px solid #ff00ff;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #a0a0c0;
+            box-shadow: 0 0 15px rgba(255,0,255,0.08);
+        }
+        .memo strong { color: #ff00ff; }
+        .memo em { color: #00fff5; font-style: normal; }
+
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #canvas-container canvas {
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+        }
+        .side-panel {
+            width: 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .panel {
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 0 15px rgba(0,255,245,0.05);
+        }
+        .panel h3 {
+            color: #00fff5;
+            font-size: 12px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .prop-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            padding: 3px 0;
+            border-bottom: 1px solid #1a1a2e;
+        }
+        .prop-label { color: #7a7a8e; }
+        .prop-value { color: #39ff14; font-weight: bold; }
+
+        .controls { display: flex; flex-direction: column; gap: 6px; }
+        button {
+            background: #1a1a2e;
+            color: #00fff5;
+            border: 1px solid #00fff5;
+            padding: 8px 14px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 12px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s;
+        }
+        button:hover {
+            background: #00fff5;
+            color: #0a0a0f;
+            box-shadow: 0 0 12px rgba(0,255,245,0.3);
+        }
+        .slider-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #7a7a8e;
+        }
+        .slider-row input[type="range"] {
+            flex: 1;
+            accent-color: #00fff5;
+            height: 4px;
+        }
+        .slider-val { color: #39ff14; min-width: 30px; text-align: right; }
+
+        .explanation {
+            max-width: 820px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+            padding: 16px;
+            margin-top: 16px;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #a0a0c0;
+        }
+        .explanation h3 { color: #00fff5; margin-bottom: 8px; }
+        .explanation code {
+            background: #0a0a0f;
+            padding: 1px 5px;
+            border-radius: 2px;
+            color: #39ff14;
+            font-size: 11px;
+        }
+
+        details {
+            max-width: 820px;
+            width: 100%;
+            margin-top: 12px;
+            background: #12121e;
+            border: 1px solid #2a2a4a;
+            border-radius: 4px;
+        }
+        summary {
+            padding: 10px 14px;
+            cursor: pointer;
+            color: #ff00ff;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        summary:hover { color: #00fff5; }
+        .code-block {
+            background: #0a0a0f;
+            border-left: 3px solid #ff00ff;
+            padding: 12px;
+            margin: 8px 14px 14px;
+            font-size: 11px;
+            line-height: 1.5;
+            overflow-x: auto;
+            color: #c0c0e0;
+            white-space: pre;
+        }
+        .code-block .comment { color: #7a7a8e; }
+        .code-block .keyword { color: #ff00ff; }
+        .code-block .string { color: #39ff14; }
+        .code-block .type { color: #00fff5; }
+    </style>
+</head>
+<body>
+    <h1>PETRI DISH 01: SPECIMEN ALPHA</h1>
+    <p class="subtitle">CSC 249 Module 1 &mdash; Object Observation Lab</p>
+
+    <div class="memo">
+        <strong>MEMO &mdash; DEPARTMENT OF BIOLOGICAL OBSERVATION</strong><br><br>
+        Employee, The Algorithm has detected unclassified life forms in Petri Dish Sector 7.
+        You are assigned to observe, document, and modify specimen behavior.
+        Each specimen is an <em>object</em> with <em>state</em> (what it is) and
+        <em>behavior</em> (what it does). Your compliance rating depends on demonstrating
+        understanding of specimen internals.<br>
+        <em>&mdash; Department of Biological Observation</em>
+    </div>
+
+    <div class="main-layout">
+        <div id="canvas-container"></div>
+        <div class="side-panel">
+            <div class="panel">
+                <h3>Specimen Properties</h3>
+                <div id="props"></div>
+            </div>
+            <div class="panel">
+                <h3>Controls</h3>
+                <div class="controls">
+                    <button onclick="addCritter()">+ Add Specimen</button>
+                    <button onclick="randomizeSelected()">Randomize Value</button>
+                    <button onclick="toggleWander()">Toggle Wander</button>
+                    <button onclick="resetDish()">Reset</button>
+                </div>
+                <div style="margin-top: 10px;">
+                    <div class="slider-row">
+                        <span>Speed</span>
+                        <input type="range" id="slider-speed" min="0" max="5" step="0.1" value="2">
+                        <span class="slider-val" id="val-speed">2.0</span>
+                    </div>
+                    <div class="slider-row">
+                        <span>Force</span>
+                        <input type="range" id="slider-force" min="0" max="0.2" step="0.005" value="0.05">
+                        <span class="slider-val" id="val-force">0.05</span>
+                    </div>
+                </div>
+            </div>
+            <div class="panel">
+                <h3>Population</h3>
+                <div id="pop-info" style="font-size: 11px; color: #7a7a8e;">
+                    Count: 0 | Click a specimen to select it.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="explanation">
+        <h3>What You're Seeing</h3>
+        <p>Each creature in the petri dish is an <strong>object</strong> &mdash; an instance of the
+        <code>Critter</code> class. It has <strong>state</strong> (properties like
+        <code>value</code>, <code>pos</code>, <code>vel</code>) and <strong>behavior</strong>
+        (methods like <code>wander()</code>, <code>separate()</code>, <code>display()</code>).</p>
+        <p>Notice how each critter's <strong>shape</strong> (number of sides) and <strong>size</strong>
+        map to its <code>value</code>. Low values are small triangles; high values are large octagons.
+        The object bundles all this data together &mdash; just like the Course class from Module 1.</p>
+        <p><strong>Try:</strong> Click a critter to select it. Change the Speed slider to 0 and watch
+        it stop. Then ask yourself: what does <code>maxSpeed</code> control in <code>update()</code>?</p>
+    </div>
+
+    <!-- Python Appendix -->
+    <details>
+        <summary>APPENDIX A: Python Critter (Skeleton)</summary>
+        <div class="code-block"><span class="comment"># critter.py - CSC 249 Petri Dish 01
+# Data-only version of the visual Critter class.
+# No graphics - just state and behavior in pure Python.</span>
+
+<span class="keyword">import</span> random
+<span class="keyword">import</span> math
+
+<span class="keyword">class</span> <span class="type">Critter</span>:
+    <span class="string">"""A simple object with state (properties) and behavior (methods)."""</span>
+
+    <span class="keyword">def</span> __init__(self, id: <span class="type">int</span>, value: <span class="type">int</span>):
+        self._id = id
+        self._value = value
+        self._x = random.uniform(0, 800)
+        self._y = random.uniform(0, 500)
+        self._vx = random.uniform(-1, 1)
+        self._vy = random.uniform(-1, 1)
+        self._max_speed = 2.0
+        <span class="comment"># TODO: Add size property (map value 0-100 to size 8-24)</span>
+        <span class="comment"># TODO: Add sides property (map value 0-100 to sides 3-8)</span>
+
+    <span class="comment"># --- Getters ---</span>
+    <span class="keyword">def</span> get_id(self) -> <span class="type">int</span>:
+        <span class="keyword">return</span> self._id
+
+    <span class="keyword">def</span> get_value(self) -> <span class="type">int</span>:
+        <span class="keyword">return</span> self._value
+
+    <span class="keyword">def</span> get_position(self) -> <span class="type">tuple</span>:
+        <span class="keyword">return</span> (self._x, self._y)
+
+    <span class="comment"># --- Setters ---</span>
+    <span class="keyword">def</span> set_value(self, value: <span class="type">int</span>):
+        <span class="string">"""Set value AND update derived properties (size, sides)."""</span>
+        self._value = max(0, min(100, value))
+        <span class="comment"># TODO: Recalculate size and sides based on new value</span>
+
+    <span class="keyword">def</span> set_max_speed(self, speed: <span class="type">float</span>):
+        self._max_speed = max(0, speed)
+
+    <span class="comment"># --- Behavior ---</span>
+    <span class="keyword">def</span> update(self):
+        <span class="string">"""Move the critter by its velocity. Clamp speed to max_speed."""</span>
+        <span class="comment"># TODO: Calculate current speed from vx, vy</span>
+        <span class="comment"># TODO: If speed > max_speed, scale velocity down</span>
+        <span class="comment"># TODO: Update x, y by adding vx, vy</span>
+        <span class="comment"># TODO: Wrap around edges (0-800 for x, 0-500 for y)</span>
+        <span class="keyword">pass</span>
+
+    <span class="keyword">def</span> __str__(self) -> <span class="type">str</span>:
+        <span class="keyword">return</span> f<span class="string">"Critter #{self._id} (value={self._value}, pos=({self._x:.1f}, {self._y:.1f}))"</span>
+
+
+<span class="comment"># --- Test it ---</span>
+<span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:
+    c = <span class="type">Critter</span>(1, 50)
+    print(c)
+    print(f<span class="string">"Position: {c.get_position()}"</span>)
+    c.set_value(90)
+    print(f<span class="string">"After set_value(90): {c}"</span>)
+    <span class="keyword">for</span> _ <span class="keyword">in</span> range(10):
+        c.update()
+    print(f<span class="string">"After 10 updates: {c}"</span>)</div>
+    </details>
+
+    <!-- C++ Appendix -->
+    <details>
+        <summary>APPENDIX B: C++ Critter (Skeleton)</summary>
+        <div class="code-block"><span class="comment">// critter.cpp - CSC 249 Petri Dish 01
+// Data-only version of the visual Critter class.
+// Compile: g++ -o critter critter.cpp
+// Run: ./critter</span>
+
+<span class="keyword">#include</span> &lt;iostream&gt;
+<span class="keyword">#include</span> &lt;string&gt;
+<span class="keyword">#include</span> &lt;cmath&gt;
+<span class="keyword">#include</span> &lt;cstdlib&gt;
+<span class="keyword">#include</span> &lt;ctime&gt;
+
+<span class="keyword">class</span> <span class="type">Critter</span> {
+<span class="keyword">private</span>:
+    <span class="type">int</span> id;
+    <span class="type">int</span> value;
+    <span class="type">float</span> x, y;
+    <span class="type">float</span> vx, vy;
+    <span class="type">float</span> maxSpeed;
+    <span class="comment">// TODO: Add size (float) and sides (int) members</span>
+
+<span class="keyword">public</span>:
+    <span class="type">Critter</span>(<span class="type">int</span> id, <span class="type">int</span> value) {
+        this-&gt;id = id;
+        this-&gt;value = value;
+        x = (<span class="type">float</span>)(rand() % 800);
+        y = (<span class="type">float</span>)(rand() % 500);
+        vx = ((float)rand() / RAND_MAX) * 2 - 1;
+        vy = ((float)rand() / RAND_MAX) * 2 - 1;
+        maxSpeed = 2.0f;
+        <span class="comment">// TODO: Calculate size from value (map 0-100 to 8-24)</span>
+        <span class="comment">// TODO: Calculate sides from value (map 0-100 to 3-8)</span>
+    }
+
+    <span class="comment">// --- Getters ---</span>
+    <span class="type">int</span> getId() <span class="keyword">const</span> { <span class="keyword">return</span> id; }
+    <span class="type">int</span> getValue() <span class="keyword">const</span> { <span class="keyword">return</span> value; }
+    <span class="type">float</span> getX() <span class="keyword">const</span> { <span class="keyword">return</span> x; }
+    <span class="type">float</span> getY() <span class="keyword">const</span> { <span class="keyword">return</span> y; }
+
+    <span class="comment">// --- Setters ---</span>
+    <span class="keyword">void</span> setValue(<span class="type">int</span> v) {
+        value = (v &lt; 0) ? 0 : (v &gt; 100) ? 100 : v;
+        <span class="comment">// TODO: Recalculate size and sides</span>
+    }
+
+    <span class="keyword">void</span> setMaxSpeed(<span class="type">float</span> s) {
+        maxSpeed = (s &lt; 0) ? 0 : s;
+    }
+
+    <span class="comment">// --- Behavior ---</span>
+    <span class="keyword">void</span> update() {
+        <span class="comment">// TODO: Calculate current speed = sqrt(vx*vx + vy*vy)</span>
+        <span class="comment">// TODO: If speed > maxSpeed, scale vx and vy down</span>
+        <span class="comment">// TODO: x += vx; y += vy;</span>
+        <span class="comment">// TODO: Wrap edges (fmod or manual check)</span>
+    }
+
+    std::<span class="type">string</span> toString() <span class="keyword">const</span> {
+        <span class="keyword">return</span> <span class="string">"Critter #"</span> + std::to_string(id)
+             + <span class="string">" (value="</span> + std::to_string(value)
+             + <span class="string">", pos=("</span> + std::to_string(x) + <span class="string">","</span> + std::to_string(y) + <span class="string">"))"</span>;
+    }
+};
+
+<span class="type">int</span> main() {
+    srand(time(NULL));
+    <span class="type">Critter</span> c(1, 50);
+    std::cout &lt;&lt; c.toString() &lt;&lt; std::endl;
+    c.setValue(90);
+    std::cout &lt;&lt; <span class="string">"After setValue(90): "</span> &lt;&lt; c.toString() &lt;&lt; std::endl;
+    <span class="keyword">for</span> (<span class="type">int</span> i = 0; i &lt; 10; i++) {
+        c.update();
+    }
+    std::cout &lt;&lt; <span class="string">"After 10 updates: "</span> &lt;&lt; c.toString() &lt;&lt; std::endl;
+    <span class="keyword">return</span> 0;
+}</div>
+    </details>
+
+    <script>
+    // ===================================================================
+    // PETRI DISH 01: SPECIMEN ALPHA
+    // CSC 249 - A visual object observation lab
+    //
+    // This code defines a Critter class (an object with state and behavior)
+    // and places it in a neon-themed "petri dish" canvas.
+    // ===================================================================
+
+    // === THEME CONSTANTS ===
+    const VOID_BLACK   = [10, 10, 15];
+    const GRID_DARK    = [26, 26, 46];
+    const NEON_CYAN    = [0, 255, 245];
+    const NEON_MAGENTA = [255, 0, 255];
+    const NEON_GREEN   = [57, 255, 20];
+    const NEON_ORANGE  = [255, 102, 0];
+    const NEON_RED     = [255, 0, 64];
+    const TEXT_DIM     = [122, 122, 142];
+    const TEXT_BRIGHT  = [224, 224, 255];
+
+    const CANVAS_W = 540;
+    const CANVAS_H = 420;
+
+    // === CRITTER CLASS ===
+    // This is the core "object" students are observing.
+    // It has STATE (properties) and BEHAVIOR (methods).
+    class Critter {
+        constructor(id, value) {
+            // --- STATE (properties) ---
+            this.id = id;                            // Unique identifier
+            this.value = value;                      // Numeric value (0-100)
+            this.pos = createVector(               // Position in the dish
+                random(40, CANVAS_W - 40),
+                random(40, CANVAS_H - 40)
+            );
+            this.vel = createVector(               // Velocity (direction + speed)
+                random(-1, 1),
+                random(-1, 1)
+            );
+            this.acc = createVector(0, 0);           // Acceleration
+            this.maxSpeed = 2;                       // Speed limit
+            this.maxForce = 0.05;                    // Steering force limit
+
+            // Derived from value: size and shape
+            this.size = map(value, 0, 100, 10, 28); // Bigger value = bigger critter
+            this.sides = floor(map(value, 0, 100, 3, 8)); // More sides for higher values
+            this.hue = map(value, 0, 100, 160, 200);      // Cyan-ish color range
+
+            this.wandering = true;                   // Is it moving on its own?
+            this.selected = false;                   // Is the user looking at this one?
+            this.trail = [];                         // Last N positions (for trail effect)
+        }
+
+        // --- BEHAVIOR (methods) ---
+
+        // Apply a force to the critter (Newton's 2nd law: F = ma, here m=1)
+        applyForce(force) {
+            this.acc.add(force);
+        }
+
+        // Wander: apply a small random steering force
+        wander() {
+            if (!this.wandering) return;
+            let wanderForce = p5.Vector.random2D();
+            wanderForce.mult(this.maxForce * 0.5);
+            this.applyForce(wanderForce);
+        }
+
+        // Separate: steer away from nearby critters (avoids overlap)
+        separate(others) {
+            let desiredSep = this.size * 2;
+            let steer = createVector(0, 0);
+            let count = 0;
+            for (let other of others) {
+                if (other === this) continue;
+                let d = p5.Vector.dist(this.pos, other.pos);
+                if (d > 0 && d < desiredSep) {
+                    let diff = p5.Vector.sub(this.pos, other.pos);
+                    diff.normalize();
+                    diff.div(d); // Weight by distance
+                    steer.add(diff);
+                    count++;
+                }
+            }
+            if (count > 0) {
+                steer.div(count);
+                steer.setMag(this.maxSpeed);
+                steer.sub(this.vel);
+                steer.limit(this.maxForce);
+                this.applyForce(steer);
+            }
+        }
+
+        // Update: move the critter by one frame
+        update() {
+            // Store trail position
+            this.trail.push(this.pos.copy());
+            if (this.trail.length > 20) this.trail.shift();
+
+            this.vel.add(this.acc);         // Accelerate
+            this.vel.limit(this.maxSpeed);  // Enforce speed limit
+            this.pos.add(this.vel);         // Move
+            this.acc.mult(0);               // Reset acceleration
+        }
+
+        // Wrap around edges (toroidal space)
+        edges() {
+            if (this.pos.x > CANVAS_W) this.pos.x = 0;
+            if (this.pos.x < 0) this.pos.x = CANVAS_W;
+            if (this.pos.y > CANVAS_H) this.pos.y = 0;
+            if (this.pos.y < 0) this.pos.y = CANVAS_H;
+        }
+
+        // Display: draw the critter on the canvas
+        display() {
+            push();
+            translate(this.pos.x, this.pos.y);
+
+            // Rotate to face direction of movement
+            let angle = this.vel.heading();
+            rotate(angle);
+
+            // Glow layer (drawn larger and transparent)
+            let glowAlpha = this.selected ? 80 : 30;
+            let col = this.selected ? NEON_MAGENTA : NEON_CYAN;
+
+            drawingContext.shadowBlur = this.selected ? 25 : 15;
+            drawingContext.shadowColor = `rgba(${col[0]},${col[1]},${col[2]},0.6)`;
+
+            // Draw polygon shape
+            noFill();
+            stroke(col[0], col[1], col[2], glowAlpha + 60);
+            strokeWeight(this.selected ? 2.5 : 1.5);
+            this.drawPolygon(0, 0, this.size, this.sides);
+
+            // Inner fill (very subtle)
+            fill(col[0], col[1], col[2], 20);
+            noStroke();
+            this.drawPolygon(0, 0, this.size * 0.7, this.sides);
+
+            // Value label
+            drawingContext.shadowBlur = 0;
+            fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2], 180);
+            textAlign(CENTER, CENTER);
+            textSize(8);
+            text(this.value, 0, 0);
+
+            pop();
+
+            // Draw trail
+            if (this.trail.length > 2) {
+                noFill();
+                for (let i = 1; i < this.trail.length; i++) {
+                    let alpha = map(i, 0, this.trail.length, 0, 60);
+                    stroke(col[0], col[1], col[2], alpha);
+                    strokeWeight(0.5);
+                    line(
+                        this.trail[i - 1].x, this.trail[i - 1].y,
+                        this.trail[i].x, this.trail[i].y
+                    );
+                }
+            }
+        }
+
+        // Helper: draw a regular polygon
+        drawPolygon(x, y, radius, npoints) {
+            beginShape();
+            for (let a = 0; a < TWO_PI; a += TWO_PI / npoints) {
+                let sx = x + cos(a) * radius;
+                let sy = y + sin(a) * radius;
+                vertex(sx, sy);
+            }
+            endShape(CLOSE);
+        }
+
+        // Check if a point is near this critter (for clicking)
+        contains(px, py) {
+            return dist(px, py, this.pos.x, this.pos.y) < this.size + 5;
+        }
+
+        // Update derived properties when value changes
+        updateDerived() {
+            this.size = map(this.value, 0, 100, 10, 28);
+            this.sides = floor(map(this.value, 0, 100, 3, 8));
+            this.hue = map(this.value, 0, 100, 160, 200);
+        }
+    }
+
+    // === GLOBAL STATE ===
+    let critters = [];
+    let selectedCritter = null;
+    let nextId = 1;
+
+    // === P5.JS SETUP ===
+    function setup() {
+        let canvas = createCanvas(CANVAS_W, CANVAS_H);
+        canvas.parent('canvas-container');
+        frameRate(30);
+        textFont('Courier New');
+
+        // Start with one specimen
+        addCritter();
+    }
+
+    // === P5.JS DRAW (runs every frame) ===
+    function draw() {
+        // Background
+        background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+        // Grid overlay
+        stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+        strokeWeight(0.5);
+        for (let x = 0; x < CANVAS_W; x += 40) line(x, 0, x, CANVAS_H);
+        for (let y = 0; y < CANVAS_H; y += 40) line(0, y, CANVAS_W, y);
+
+        // Read slider values and apply to all critters
+        let speedVal = parseFloat(document.getElementById('slider-speed').value);
+        let forceVal = parseFloat(document.getElementById('slider-force').value);
+        document.getElementById('val-speed').textContent = speedVal.toFixed(1);
+        document.getElementById('val-force').textContent = forceVal.toFixed(2);
+
+        // Update and display critters
+        for (let c of critters) {
+            c.maxSpeed = speedVal;
+            c.maxForce = forceVal;
+            c.wander();
+            c.separate(critters);
+            c.update();
+            c.edges();
+            c.display();
+        }
+
+        // CRT scanline effect
+        for (let y = 0; y < CANVAS_H; y += 3) {
+            stroke(0, 0, 0, 8);
+            strokeWeight(1);
+            line(0, y, CANVAS_W, y);
+        }
+
+        // Vignette effect (darken edges)
+        drawingContext.shadowBlur = 0;
+        for (let i = 0; i < 40; i++) {
+            noFill();
+            stroke(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2], map(i, 0, 40, 6, 0));
+            rect(i, i, CANVAS_W - i * 2, CANVAS_H - i * 2);
+        }
+
+        // Update properties panel
+        updatePropsPanel();
+    }
+
+    // === MOUSE INTERACTION ===
+    function mousePressed() {
+        // Check if click is inside the canvas
+        if (mouseX < 0 || mouseX > CANVAS_W || mouseY < 0 || mouseY > CANVAS_H) return;
+
+        // Deselect all
+        for (let c of critters) c.selected = false;
+        selectedCritter = null;
+
+        // Check if clicking on a critter
+        for (let c of critters) {
+            if (c.contains(mouseX, mouseY)) {
+                c.selected = true;
+                selectedCritter = c;
+                break;
+            }
+        }
+    }
+
+    // === CONTROL FUNCTIONS (called by buttons) ===
+    function addCritter() {
+        let value = floor(random(5, 96));
+        let c = new Critter(nextId++, value);
+        critters.push(c);
+        // Auto-select the new one
+        for (let cr of critters) cr.selected = false;
+        c.selected = true;
+        selectedCritter = c;
+        updatePopInfo();
+    }
+
+    function randomizeSelected() {
+        if (!selectedCritter) return;
+        selectedCritter.value = floor(random(5, 96));
+        selectedCritter.updateDerived();
+    }
+
+    function toggleWander() {
+        if (!selectedCritter) return;
+        selectedCritter.wandering = !selectedCritter.wandering;
+        if (!selectedCritter.wandering) {
+            selectedCritter.vel.mult(0); // Stop immediately
+        }
+    }
+
+    function resetDish() {
+        critters = [];
+        selectedCritter = null;
+        nextId = 1;
+        addCritter();
+        updatePopInfo();
+    }
+
+    // === UI UPDATES ===
+    function updatePropsPanel() {
+        let el = document.getElementById('props');
+        if (!selectedCritter) {
+            el.innerHTML = '<div style="color:#7a7a8e;font-size:11px;">No specimen selected.<br>Click one in the dish.</div>';
+            return;
+        }
+        let c = selectedCritter;
+        el.innerHTML = `
+            <div class="prop-row"><span class="prop-label">id</span><span class="prop-value">${c.id}</span></div>
+            <div class="prop-row"><span class="prop-label">value</span><span class="prop-value">${c.value}</span></div>
+            <div class="prop-row"><span class="prop-label">pos.x</span><span class="prop-value">${c.pos.x.toFixed(1)}</span></div>
+            <div class="prop-row"><span class="prop-label">pos.y</span><span class="prop-value">${c.pos.y.toFixed(1)}</span></div>
+            <div class="prop-row"><span class="prop-label">vel.x</span><span class="prop-value">${c.vel.x.toFixed(2)}</span></div>
+            <div class="prop-row"><span class="prop-label">vel.y</span><span class="prop-value">${c.vel.y.toFixed(2)}</span></div>
+            <div class="prop-row"><span class="prop-label">speed</span><span class="prop-value">${c.vel.mag().toFixed(2)}</span></div>
+            <div class="prop-row"><span class="prop-label">size</span><span class="prop-value">${c.size.toFixed(1)}</span></div>
+            <div class="prop-row"><span class="prop-label">sides</span><span class="prop-value">${c.sides}</span></div>
+            <div class="prop-row"><span class="prop-label">wandering</span><span class="prop-value">${c.wandering}</span></div>
+            <div class="prop-row"><span class="prop-label">maxSpeed</span><span class="prop-value">${c.maxSpeed.toFixed(1)}</span></div>
+            <div class="prop-row"><span class="prop-label">maxForce</span><span class="prop-value">${c.maxForce.toFixed(3)}</span></div>
+        `;
+    }
+
+    function updatePopInfo() {
+        document.getElementById('pop-info').textContent =
+            `Count: ${critters.length} | Click a specimen to select it.`;
+    }
+    </script>
+</body>
+</html>
