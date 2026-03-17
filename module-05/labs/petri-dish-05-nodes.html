@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petri Dish 05: Linked Lists &amp; Trees | CSC 249</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e0e0ff;
+            font-family: 'Courier New', Consolas, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        h1 { color: #00fff5; font-size: 22px; margin-bottom: 4px; text-shadow: 0 0 20px rgba(0,255,245,0.4); }
+        .subtitle { color: #7a7a8e; font-size: 13px; margin-bottom: 12px; }
+
+        .memo {
+            max-width: 800px; background: #12121e; border: 1px solid #2a2a4a;
+            border-left: 3px solid #ff00ff; padding: 12px 16px; margin-bottom: 12px;
+            font-size: 11px; line-height: 1.6; color: #a0a0c0;
+            box-shadow: 0 0 15px rgba(255,0,255,0.08);
+        }
+        .memo strong { color: #ff00ff; }
+        .memo em { color: #00fff5; font-style: normal; }
+
+        /* Node anatomy strip */
+        .anatomy-strip {
+            max-width: 800px; width: 100%;
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 12px;
+            background: #0a0a14; border: 1px solid #1a1a2e; border-radius: 4px;
+            padding: 12px 20px;
+        }
+        .anatomy-block { text-align: center; }
+        .anatomy-title { font-size: 9px; color: #7a7a8e; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+        .anatomy-node { display: inline-flex; border: 1px solid #2a2a6a; border-radius: 3px; overflow: hidden; }
+        .anat-val { background: #0d0d24; color: #e0e0ff; font-size: 11px; padding: 5px 10px; }
+        .anat-ptr { background: #0d0d24; color: #00fff5; font-size: 10px; padding: 5px 8px; border-left: 1px solid #2a2a6a; }
+        .anat-ptr.dim { color: #3a3a6a; }
+        .anatomy-note { font-size: 9px; color: #5a5a7e; margin-top: 5px; }
+        .anatomy-sep { color: #2a2a5a; font-size: 18px; align-self: center; }
+        .anatomy-insight {
+            text-align: center; background: #0d0d1a; border: 1px solid #1a1a3a; border-radius: 3px;
+            padding: 8px 14px;
+        }
+        .anatomy-insight .top { font-size: 9px; color: #7a7a8e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .anatomy-insight .vals {
+            display: flex; gap: 4px; justify-content: center; align-items: center; font-size: 11px;
+        }
+        .tag-n { color: #ff4444; }
+        .tag-logn { color: #39ff14; }
+        .anatomy-insight .note { font-size: 9px; color: #4a4a6a; margin-top: 3px; }
+
+        .top-bar {
+            display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+            flex-wrap: wrap; justify-content: center;
+        }
+        .top-bar button {
+            background: #1a1a2e; color: #00fff5; border: 1px solid #00fff5;
+            padding: 6px 12px; font-family: 'Courier New', Consolas, monospace;
+            font-size: 11px; cursor: pointer; border-radius: 3px; transition: all 0.15s;
+        }
+        .top-bar button:hover { background: #00fff5; color: #0a0a0f; box-shadow: 0 0 10px rgba(0,255,245,0.3); }
+        .top-bar .label { color: #7a7a8e; font-size: 11px; }
+        .incoming-info { color: #ff6600; font-size: 11px; }
+
+        .panels { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+        .struct-panel {
+            background: #0a0a0f; border: 1px solid #2a2a4a; border-radius: 4px;
+            width: 390px; display: flex; flex-direction: column;
+        }
+        .struct-header {
+            padding: 8px 10px; border-bottom: 1px solid #2a2a4a;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .struct-header h3 { color: #00fff5; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .struct-header .ops { color: #7a7a8e; font-size: 10px; }
+        .struct-canvas { flex: 1; }
+        .struct-controls {
+            padding: 8px 10px; border-top: 1px solid #2a2a4a;
+            display: flex; gap: 6px; flex-wrap: wrap;
+        }
+        .struct-controls button {
+            background: #12121e; color: #00fff5; border: 1px solid #2a2a4a;
+            padding: 5px 10px; font-family: 'Courier New', Consolas, monospace;
+            font-size: 10px; cursor: pointer; border-radius: 2px; transition: all 0.12s;
+        }
+        .struct-controls button:hover { border-color: #00fff5; box-shadow: 0 0 8px rgba(0,255,245,0.2); }
+        .struct-controls button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .struct-controls button:disabled:hover { border-color: #2a2a4a; box-shadow: none; }
+        .struct-status { padding: 4px 10px; font-size: 10px; color: #ff6600; min-height: 18px; word-break: break-all; }
+        .struct-metrics { padding: 4px 10px 8px; font-size: 10px; color: #7a7a8e; }
+        .struct-metrics span { color: #39ff14; }
+
+        .explanation {
+            max-width: 800px; background: #12121e; border: 1px solid #2a2a4a;
+            border-radius: 4px; padding: 14px; margin-top: 12px;
+            font-size: 12px; line-height: 1.7; color: #a0a0c0;
+        }
+        .explanation h3 { color: #00fff5; margin-bottom: 8px; }
+        .explanation p { margin-bottom: 8px; }
+        .explanation p:last-child { margin-bottom: 0; }
+        .explanation code { background: #0a0a0f; padding: 1px 5px; border-radius: 2px; color: #39ff14; font-size: 11px; }
+
+        details {
+            max-width: 800px; width: 100%; margin-top: 10px;
+            background: #12121e; border: 1px solid #2a2a4a; border-radius: 4px;
+        }
+        summary { padding: 10px 14px; cursor: pointer; color: #ff00ff; font-size: 13px; font-weight: bold; }
+        summary:hover { color: #00fff5; }
+        .code-block {
+            background: #0a0a0f; border-left: 3px solid #ff00ff; padding: 12px;
+            margin: 8px 14px 14px; font-size: 11px; line-height: 1.5;
+            overflow-x: auto; color: #c0c0e0; white-space: pre;
+        }
+    </style>
+</head>
+<body>
+
+<h1>PETRI DISH 05: LINKED LISTS &amp; TREES &mdash; COMMON GROUND</h1>
+<p class="subtitle">CSC 249 Module 5 &mdash; Pointers, References, and the Art of Connecting Data</p>
+
+<div class="memo">
+    <strong>MEMO &mdash; DEPARTMENT OF STRUCTURAL RELATIONS</strong><br>
+    Employee, The Algorithm has identified a previously undocumented kinship between linear and hierarchical structures.
+    Both operate on the same principle: <em>nodes that point to other nodes</em>.
+    The distinction is arithmetic. A linked list node carries <em>one pointer</em>. A tree node carries <em>two</em>.
+    You will observe this difference directly. Insert identical specimens into both structures.
+    Record what traversal costs. Record what search costs. Structure determines behavior.
+    <em>&mdash; Department of Structural Relations</em>
+</div>
+
+<!-- Node anatomy comparison strip -->
+<div class="anatomy-strip">
+    <div class="anatomy-block">
+        <div class="anatomy-title">Linked List Node</div>
+        <div class="anatomy-node">
+            <div class="anat-val">value</div>
+            <div class="anat-ptr">next &rarr;</div>
+        </div>
+        <div class="anatomy-note">1 pointer &mdash; linear chain</div>
+    </div>
+    <div class="anatomy-sep">&#8594;</div>
+    <div class="anatomy-block">
+        <div class="anatomy-title">add one pointer</div>
+        <div class="anatomy-node">
+            <div class="anat-ptr">&larr; left</div>
+            <div class="anat-val">value</div>
+            <div class="anat-ptr">right &rarr;</div>
+        </div>
+        <div class="anatomy-note">2 pointers &mdash; branching hierarchy</div>
+    </div>
+    <div class="anatomy-sep">&#8594;</div>
+    <div class="anatomy-insight">
+        <div class="top">Result on search</div>
+        <div class="vals">
+            <span class="tag-n">O(n)</span>
+            <span style="color:#3a3a6a">vs</span>
+            <span class="tag-logn">O(log n)</span>
+        </div>
+        <div class="note">same pointer idea, very different cost</div>
+    </div>
+</div>
+
+<div class="top-bar">
+    <span class="label">Incoming specimens:</span>
+    <button onclick="generateIncoming(10)">Generate 10</button>
+    <button onclick="generateIncoming(20)">Generate 20</button>
+    <button onclick="insertSortedData()">Insert 1&ndash;10 (sorted)</button>
+    <button onclick="resetAll()">Reset All</button>
+    <span class="incoming-info" id="incoming-info">No specimens queued</span>
+</div>
+
+<div class="panels">
+
+    <!-- LINKED LIST PANEL -->
+    <div class="struct-panel">
+        <div class="struct-header">
+            <h3>Linked List &nbsp;[val | next &rarr;]</h3>
+            <span class="ops" id="ll-ops">size: 0</span>
+        </div>
+        <div id="ll-canvas" class="struct-canvas"></div>
+        <div class="struct-status" id="ll-status"></div>
+        <div class="struct-controls">
+            <button id="btn-ll-tail"   onclick="llInsertTail()"   disabled>Insert Tail</button>
+            <button id="btn-ll-head"   onclick="llInsertHead()"   disabled>Insert Head</button>
+            <button id="btn-ll-remove" onclick="llRemoveHead()"   disabled>Remove Head</button>
+            <button id="btn-ll-step"   onclick="llStepTraverse()" disabled>Step &nbsp;&#9654;</button>
+            <button id="btn-ll-search" onclick="llSearchUI()"     disabled>Search</button>
+        </div>
+        <div class="struct-metrics">
+            Insert Head: <span>O(1)</span> &nbsp;|&nbsp;
+            Insert Tail: <span>O(n)</span> &nbsp;|&nbsp;
+            Search: <span>O(n)</span>
+        </div>
+    </div>
+
+    <!-- BST PANEL -->
+    <div class="struct-panel">
+        <div class="struct-header">
+            <h3>BST &nbsp;[&larr; left | val | right &rarr;]</h3>
+            <span class="ops" id="bst-ops">size: 0</span>
+        </div>
+        <div id="bst-canvas" class="struct-canvas"></div>
+        <div class="struct-status" id="bst-status"></div>
+        <div class="struct-controls">
+            <button id="btn-bst-insert"  onclick="bstInsert()"       disabled>Insert</button>
+            <button id="btn-bst-search"  onclick="bstSearchUI()"     disabled>Search</button>
+            <button id="btn-bst-inorder" onclick="bstStepInorder()"  disabled>Inorder &nbsp;&#9654;</button>
+        </div>
+        <div class="struct-metrics">
+            Insert: <span>O(log N)</span> avg &nbsp;|&nbsp;
+            Search: <span>O(log N)</span> avg &nbsp;|&nbsp;
+            <span>O(N)</span> worst
+        </div>
+    </div>
+
+</div>
+
+<div class="explanation">
+    <h3>What You're Seeing</h3>
+    <p><strong>Linked List [val | next]:</strong>
+    Each box shows a node split into two fields: the value and the <code>next</code> pointer.
+    Nodes live anywhere in memory &mdash; the pointer is the only connection.
+    <strong>Insert Head</strong> rewires one pointer: O(1).
+    <strong>Insert Tail</strong> must walk the entire chain first: O(n).
+    <strong>Search</strong> checks nodes one by one with no shortcut: always O(n).
+    Click <strong>Step &#9654;</strong> repeatedly to walk through each node; watch the cursor advance through the chain.</p>
+    <p><strong>BST [left | val | right]:</strong>
+    The same node idea, but each node carries <em>two</em> pointers.
+    That extra pointer enables branching: at each node, search discards half the remaining tree.
+    <strong>Inorder &#9654;</strong> steps through nodes in sorted order (left &rarr; root &rarr; right), visiting every node exactly once.
+    Try <strong>Insert 1&ndash;10 (sorted)</strong>: the BST degenerates into a right-leaning chain &mdash; effectively a linked list &mdash; and search cost rises to O(n).</p>
+</div>
+
+<!-- APPENDIX A: Python -->
+<details>
+    <summary>APPENDIX A: Python &mdash; LinkedList &amp; BST</summary>
+    <div class="code-block">"""
+critter_nodes.py - CSC 249 Petri Dish 05
+Linked List and Binary Search Tree implementations.
+Run: python critter_nodes.py
+
+NODE ANATOMY
+  Linked List Node:          Binary Tree Node:
+  +--------+------+          +------+--------+-------+
+  | value  | next |          | left | value  | right |
+  +--------+------+          +------+--------+-------+
+  (1 pointer)                (2 pointers)
+"""
+
+
+class CritterData:
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+    def __repr__(self):
+        return f"#{self.id}(v={self.value})"
+
+
+# ============================================================
+# LINKED LIST
+# ============================================================
+
+class ListNode:
+    def __init__(self, critter):
+        self.critter = critter
+        self.next    = None          # ONE pointer: the only connection forward
+
+
+class LinkedList:
+    def __init__(self):
+        self.head  = None
+        self._size = 0
+
+    # O(1) -- one pointer update, nothing to walk
+    def insert_head(self, critter):
+        new_node      = ListNode(critter)
+        new_node.next = self.head
+        self.head     = new_node
+        self._size   += 1
+
+    # O(n) -- must walk to the tail first
+    def insert_tail(self, critter):
+        new_node = ListNode(critter)
+        if self.head is None:
+            self.head = new_node
+            self._size += 1
+            return
+        current = self.head
+        while current.next is not None:   # walk, walk, walk...
+            current = current.next
+        current.next = new_node           # found it, attach
+        self._size  += 1
+
+    # O(1) -- one pointer update
+    def remove_head(self):
+        if self.head is None:
+            raise IndexError("remove_head on empty list")
+        removed   = self.head.critter
+        self.head = self.head.next
+        self._size -= 1
+        return removed
+
+    # O(n) -- no shortcut; every node is a candidate
+    def search(self, target_value):
+        comparisons = 0
+        current = self.head
+        while current is not None:
+            comparisons += 1
+            if current.critter.value == target_value:
+                return current.critter, comparisons
+            current = current.next
+        return None, comparisons
+
+    def traverse(self):
+        result, current = [], self.head
+        while current:
+            result.append(current.critter)
+            current = current.next
+        return result
+
+    def size(self):
+        return self._size
+
+
+# ============================================================
+# BINARY SEARCH TREE
+# ============================================================
+
+class TreeNode:
+    def __init__(self, critter):
+        self.critter = critter
+        self.left    = None    # TWO pointers: left subtree
+        self.right   = None    #               right subtree
+
+
+class BST:
+    def __init__(self):
+        self.root  = None
+        self._size = 0
+
+    def insert(self, critter):
+        """Insert by value. Returns comparison count."""
+        comps = 0
+        if self.root is None:
+            self.root   = TreeNode(critter)
+            self._size += 1
+            return comps
+        current = self.root
+        while True:
+            comps += 1
+            if critter.value < current.critter.value:
+                if current.left is None:
+                    current.left = TreeNode(critter); self._size += 1; return comps
+                current = current.left
+            else:
+                if current.right is None:
+                    current.right = TreeNode(critter); self._size += 1; return comps
+                current = current.right
+
+    def search(self, target_value):
+        """Search by value. Returns (critter or None, comparisons)."""
+        comps, current = 0, self.root
+        while current:
+            comps += 1
+            if target_value == current.critter.value:
+                return current.critter, comps
+            current = current.left if target_value < current.critter.value else current.right
+        return None, comps
+
+    def inorder(self):
+        """Return all critters in ascending value order."""
+        result = []
+        self._inorder_rec(self.root, result)
+        return result
+
+    def _inorder_rec(self, node, result):
+        if node is None: return
+        self._inorder_rec(node.left,  result)  # left subtree first
+        result.append(node.critter)
+        self._inorder_rec(node.right, result)  # right subtree last
+
+    def size(self):
+        return self._size
+
+
+# ============================================================
+# DEMO: same data, two structures, different behavior
+# ============================================================
+if __name__ == "__main__":
+    import random
+
+    critters = [CritterData(i, random.randint(10, 90)) for i in range(7)]
+    vals = [c.value for c in critters]
+    print(f"Same data: {vals}")
+    print()
+
+    # ── LINKED LIST ─────────────────────────────────────────
+    print("=" * 55)
+    print("LINKED LIST")
+    print("=" * 55)
+    ll = LinkedList()
+    for c in critters:
+        ll.insert_tail(c)
+
+    print(f"Traversal (insertion order): {ll.traverse()}")
+
+    target = critters[4].value
+    result, comps = ll.search(target)
+    print(f"Search {target}: {'FOUND' if result else 'NOT FOUND'} ({comps} comparisons — O(n))")
+
+    # Show insert_head vs insert_tail cost
+    print(f"\ninsert_head: always O(1) — 1 pointer update")
+    print(f"insert_tail: O(n)        — walked {ll.size()} nodes to reach tail")
+
+    # ── BST ─────────────────────────────────────────────────
+    print()
+    print("=" * 55)
+    print("BINARY SEARCH TREE")
+    print("=" * 55)
+    bst = BST()
+    for c in critters:
+        comps = bst.insert(c)
+        print(f"  insert {c.value}: {comps} comparisons")
+
+    print(f"\nInorder traversal (sorted): {bst.inorder()}")
+
+    result, comps = bst.search(target)
+    print(f"Search {target}: {'FOUND' if result else 'NOT FOUND'} ({comps} comparisons — O(log n) avg)")
+    print(f"(Linked list needed up to {ll.size()} comparisons for same search)")
+
+    # ── DEGENERATE BST ───────────────────────────────────────
+    print()
+    print("=" * 55)
+    print("DEGENERATE BST  (sorted insert → linked-list shape)")
+    print("=" * 55)
+    bst2 = BST()
+    for i in range(1, 11):
+        comps = bst2.insert(CritterData(i, i * 10))
+        print(f"  insert {i*10}: {comps} comparisons (depth now {comps})")
+    _, comps = bst2.search(100)
+    print(f"Search for 100: {comps} comparisons — O(N)! The BST became a linked list.")</div>
+</details>
+
+<!-- APPENDIX B: C++ -->
+<details>
+    <summary>APPENDIX B: C++ &mdash; LinkedList &amp; BST</summary>
+    <div class="code-block">// critter_nodes.cpp - CSC 249 Petri Dish 05
+// Linked List and Binary Search Tree implementations.
+// Compile: g++ -std=c++17 -o critter_nodes critter_nodes.cpp
+// Run:     ./critter_nodes
+//
+// NODE ANATOMY
+//   Linked List Node:          Binary Tree Node:
+//   +--------+------+          +------+--------+-------+
+//   | value  | next |          | left | value  | right |
+//   +--------+------+          +------+--------+-------+
+//   (1 pointer)                (2 pointers)
+
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;string&gt;
+#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+
+struct CritterData {
+    int id, value;
+    std::string toString() const {
+        return "#" + std::to_string(id) + "(v=" + std::to_string(value) + ")";
+    }
+};
+
+// ============================================================
+// LINKED LIST
+// ============================================================
+
+struct ListNode {
+    CritterData critter;
+    ListNode*   next;               // ONE pointer: the only connection
+    ListNode(CritterData c) : critter(c), next(nullptr) {}
+};
+
+class LinkedList {
+    ListNode* head  = nullptr;
+    int       _size = 0;
+
+    void destroy(ListNode* n) {
+        if (!n) return;
+        destroy(n->next);
+        delete n;
+    }
+
+public:
+    ~LinkedList() { destroy(head); }
+
+    // O(1) -- one pointer update
+    void insertHead(CritterData c) {
+        ListNode* n = new ListNode(c);
+        n->next = head;
+        head    = n;
+        _size++;
+    }
+
+    // O(n) -- walk to tail first
+    void insertTail(CritterData c) {
+        ListNode* n = new ListNode(c);
+        if (!head) { head = n; _size++; return; }
+        ListNode* cur = head;
+        while (cur->next) cur = cur->next;   // walk, walk, walk...
+        cur->next = n;
+        _size++;
+    }
+
+    // O(1) -- one pointer update, then free
+    CritterData removeHead() {
+        if (!head) throw std::runtime_error("removeHead on empty list");
+        ListNode*   old     = head;
+        CritterData removed = old->critter;
+        head = head->next;
+        delete old;    // C++ requires manual deallocation
+        _size--;
+        return removed;
+    }
+
+    // O(n) -- no shortcut; every node is a candidate
+    std::pair&lt;bool, int&gt; search(int targetValue) {
+        int comps = 0;
+        ListNode* cur = head;
+        while (cur) {
+            comps++;
+            if (cur->critter.value == targetValue) return {true, comps};
+            cur = cur->next;
+        }
+        return {false, comps};
+    }
+
+    std::vector&lt;CritterData&gt; traverse() const {
+        std::vector&lt;CritterData&gt; result;
+        ListNode* cur = head;
+        while (cur) { result.push_back(cur->critter); cur = cur->next; }
+        return result;
+    }
+
+    int size() const { return _size; }
+};
+
+// ============================================================
+// BINARY SEARCH TREE
+// ============================================================
+
+struct TreeNode {
+    CritterData critter;
+    TreeNode*   left  = nullptr;   // TWO pointers: branching
+    TreeNode*   right = nullptr;   //   makes O(log n) possible
+    TreeNode(CritterData c) : critter(c) {}
+};
+
+class BST {
+    TreeNode* root  = nullptr;
+    int       _size = 0;
+
+    void inorderHelper(TreeNode* n, std::vector&lt;CritterData&gt;&amp; r) const {
+        if (!n) return;
+        inorderHelper(n->left, r);     // left subtree first
+        r.push_back(n->critter);
+        inorderHelper(n->right, r);    // right subtree last
+    }
+
+    void destroy(TreeNode* n) {
+        if (!n) return;
+        destroy(n->left);
+        destroy(n->right);
+        delete n;
+    }
+
+public:
+    ~BST() { destroy(root); }
+
+    int insert(CritterData c) {
+        int comps = 0;
+        if (!root) { root = new TreeNode(c); _size++; return comps; }
+        TreeNode* cur = root;
+        while (true) {
+            comps++;
+            if (c.value &lt; cur->critter.value) {
+                if (!cur->left)  { cur->left  = new TreeNode(c); _size++; return comps; }
+                cur = cur->left;
+            } else {
+                if (!cur->right) { cur->right = new TreeNode(c); _size++; return comps; }
+                cur = cur->right;
+            }
+        }
+    }
+
+    std::pair&lt;bool, int&gt; search(int target) const {
+        int comps = 0; TreeNode* cur = root;
+        while (cur) {
+            comps++;
+            if (target == cur->critter.value) return {true, comps};
+            cur = target &lt; cur->critter.value ? cur->left : cur->right;
+        }
+        return {false, comps};
+    }
+
+    std::vector&lt;CritterData&gt; inorder() const {
+        std::vector&lt;CritterData&gt; result;
+        inorderHelper(root, result);
+        return result;
+    }
+
+    int size() const { return _size; }
+};
+
+// ============================================================
+// DEMO: same data, two structures, different behavior
+// ============================================================
+
+int main() {
+    srand(time(nullptr));
+
+    std::vector&lt;CritterData&gt; critters;
+    for (int i = 0; i &lt; 7; i++)
+        critters.push_back({i, rand() % 80 + 10});
+
+    std::cout &lt;&lt; "Same data:";
+    for (auto&amp; c : critters) std::cout &lt;&lt; " " &lt;&lt; c.value;
+    std::cout &lt;&lt; "\n\n";
+
+    // ── LINKED LIST ──────────────────────────────────────
+    std::cout &lt;&lt; std::string(55,'=') &lt;&lt; "\nLINKED LIST\n" &lt;&lt; std::string(55,'=') &lt;&lt; "\n";
+    LinkedList ll;
+    for (auto&amp; c : critters) ll.insertTail(c);
+
+    std::cout &lt;&lt; "Traversal:";
+    for (auto&amp; c : ll.traverse()) std::cout &lt;&lt; " " &lt;&lt; c.toString();
+    std::cout &lt;&lt; "\n";
+
+    int target = critters[4].value;
+    auto [foundLL, compsLL] = ll.search(target);
+    std::cout &lt;&lt; "Search " &lt;&lt; target &lt;&lt; ": "
+              &lt;&lt; (foundLL ? "FOUND" : "NOT FOUND")
+              &lt;&lt; " (" &lt;&lt; compsLL &lt;&lt; " comparisons - O(n))\n";
+    std::cout &lt;&lt; "\ninsertHead: always O(1) -- 1 pointer update\n";
+    std::cout &lt;&lt; "insertTail: O(n)        -- walked " &lt;&lt; ll.size() &lt;&lt; " nodes\n";
+
+    // ── BST ──────────────────────────────────────────────
+    std::cout &lt;&lt; "\n" &lt;&lt; std::string(55,'=') &lt;&lt; "\nBINARY SEARCH TREE\n" &lt;&lt; std::string(55,'=') &lt;&lt; "\n";
+    BST bst;
+    for (auto&amp; c : critters) {
+        int comps = bst.insert(c);
+        std::cout &lt;&lt; "  insert " &lt;&lt; c.value &lt;&lt; ": " &lt;&lt; comps &lt;&lt; " comparisons\n";
+    }
+
+    std::cout &lt;&lt; "Inorder (sorted):";
+    for (auto&amp; c : bst.inorder()) std::cout &lt;&lt; " " &lt;&lt; c.value;
+    std::cout &lt;&lt; "\n";
+
+    auto [foundBST, compsBST] = bst.search(target);
+    std::cout &lt;&lt; "Search " &lt;&lt; target &lt;&lt; ": "
+              &lt;&lt; (foundBST ? "FOUND" : "NOT FOUND")
+              &lt;&lt; " (" &lt;&lt; compsBST &lt;&lt; " comparisons - O(log n) avg)\n";
+    std::cout &lt;&lt; "(Linked list needed up to " &lt;&lt; ll.size() &lt;&lt; " comparisons)\n";
+
+    // ── DEGENERATE BST ───────────────────────────────────
+    std::cout &lt;&lt; "\nDEGENERATE BST (sorted insert -> linked-list shape):\n";
+    BST bst2;
+    for (int i = 1; i &lt;= 10; i++) {
+        int comps = bst2.insert({i, i * 10});
+        std::cout &lt;&lt; "  insert " &lt;&lt; i*10 &lt;&lt; ": " &lt;&lt; comps &lt;&lt; " comparisons (depth now " &lt;&lt; comps &lt;&lt; ")\n";
+    }
+    auto [f2, c2] = bst2.search(100);
+    std::cout &lt;&lt; "Search 100: " &lt;&lt; c2 &lt;&lt; " comparisons - O(N)! The BST became a linked list.\n";
+
+    return 0;
+}</div>
+</details>
+
+<script>
+// ===================================================================
+// PETRI DISH 05: LINKED LISTS & TREES — COMMON GROUND
+// CSC 249 — Visualization
+// ===================================================================
+
+const VOID_BLACK   = [10, 10, 15];
+const GRID_DARK    = [26, 26, 46];
+const NEON_CYAN    = [0, 255, 245];
+const NEON_MAGENTA = [255, 0, 255];
+const NEON_GREEN   = [57, 255, 20];
+const NEON_ORANGE  = [255, 102, 0];
+const NEON_PURPLE  = [160, 0, 255];
+const TEXT_DIM     = [122, 122, 142];
+const TEXT_BRIGHT  = [224, 224, 255];
+
+const PW = 386;   // panel width (both)
+const PH = 320;   // panel height (both)
+
+// ── Linked List layout constants ──────────────────────────────────
+const LL_NODE_W = 72;
+const LL_NODE_H = 28;
+const LL_PTR_W  = 22;                       // pointer section width
+const LL_VAL_W  = LL_NODE_W - LL_PTR_W;    // value section width = 50
+const LL_GAP_X  = 14;                       // gap between nodes
+const LL_STEP_X = LL_NODE_W + LL_GAP_X;    // = 86 per slot
+const LL_PER_ROW = 4;                       // nodes per row
+const LL_ROW_H  = 52;                       // vertical spacing between rows
+const LL_START_X = 12;
+const LL_START_Y = 42;
+
+// ── Shared incoming queue ──────────────────────────────────────────
+let incoming = [];
+let nextId   = 0;
+
+// ── Linked list state ──────────────────────────────────────────────
+let llItems        = [];   // [{id, value}, ...]
+let llTraverseIdx  = -1;   // current highlighted index (-1 = not traversing)
+let llTraverseTimer = 0;
+let llSearchPath   = [];   // indices visited during search
+let llSearchTimer  = 0;
+
+// ── BST state ──────────────────────────────────────────────────────
+let bstRoot         = null;
+let bstSize         = 0;
+let bstSearchPath   = [];   // values on search path
+let bstSearchTimer  = 0;
+let bstInorderSeq   = [];   // complete inorder value sequence
+let bstInorderIdx   = -1;   // current step (-1 = not in inorder mode)
+
+// ── P5 instances ───────────────────────────────────────────────────
+let llP5, bstP5;
+
+function setup() {
+    noCanvas();
+    createCanvases();
+}
+
+function createCanvases() {
+    llP5 = new p5(function(p) {
+        p.setup = function() {
+            let c = p.createCanvas(PW, PH);
+            c.parent('ll-canvas');
+        };
+        p.draw = function() { drawLinkedList(p); };
+    });
+
+    bstP5 = new p5(function(p) {
+        p.setup = function() {
+            let c = p.createCanvas(PW, PH);
+            c.parent('bst-canvas');
+        };
+        p.draw = function() { drawBST(p); };
+    });
+}
+
+// ===================================================================
+// DRAW: LINKED LIST
+// ===================================================================
+
+function drawLinkedList(p) {
+    p.background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+    // Grid
+    p.stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+    p.strokeWeight(0.5);
+    for (let x = 0; x < PW; x += 30) p.line(x, 0, x, PH);
+    for (let y = 0; y < PH; y += 30) p.line(0, y, PW, y);
+
+    if (llItems.length === 0) {
+        p.noStroke();
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(10);
+        p.text('Empty linked list\nInsert to begin', PW / 2, PH / 2);
+        llScanlines(p);
+        return;
+    }
+
+    if (llTraverseTimer > 0) llTraverseTimer--;
+    if (llSearchTimer   > 0) llSearchTimer--;
+
+    for (let i = 0; i < llItems.length; i++) {
+        let row  = Math.floor(i / LL_PER_ROW);
+        let col  = i % LL_PER_ROW;
+        let x    = LL_START_X + col * LL_STEP_X;
+        let y    = LL_START_Y + row * LL_ROW_H;
+
+        let isHead   = (i === 0);
+        let isTail   = (i === llItems.length - 1);
+        let isCursor = (llTraverseTimer > 0 && i === llTraverseIdx);
+        let isSearchVisited = (llSearchTimer > 0 && llSearchPath.includes(i));
+        let isSearchTarget  = isSearchVisited && (llSearchPath[llSearchPath.length - 1] === i);
+
+        let cr = isCursor       ? NEON_ORANGE  :
+                 isSearchTarget ? NEON_MAGENTA :
+                 isSearchVisited ? NEON_ORANGE :
+                 isHead         ? NEON_CYAN   :
+                 [70, 70, 120];
+
+        // HEAD pointer label
+        if (isHead) {
+            p.noStroke();
+            p.fill(NEON_CYAN[0], NEON_CYAN[1], NEON_CYAN[2]);
+            p.textSize(7);
+            p.textAlign(p.CENTER, p.BOTTOM);
+            p.text('HEAD', x + LL_VAL_W / 2, y - 2);
+            p.stroke(NEON_CYAN[0], NEON_CYAN[1], NEON_CYAN[2], 60);
+            p.strokeWeight(1);
+            p.line(x + LL_VAL_W / 2, y - 1, x + LL_VAL_W / 2, y);
+        }
+
+        // Node glow
+        let glow = (isCursor || isSearchVisited) ? 14 : 4;
+        p.drawingContext.shadowBlur  = glow;
+        p.drawingContext.shadowColor = `rgba(${cr[0]},${cr[1]},${cr[2]},0.4)`;
+
+        // Value section box
+        let alpha = (isCursor || isSearchVisited) ? 220 : (isHead ? 160 : 100);
+        let sw    = (isCursor || isSearchVisited || isHead) ? 2 : 1;
+        p.stroke(cr[0], cr[1], cr[2], alpha);
+        p.strokeWeight(sw);
+        p.noFill();
+        p.rect(x, y, LL_VAL_W, LL_NODE_H, 2, 0, 0, 2);
+
+        // Pointer section box
+        p.rect(x + LL_VAL_W, y, LL_PTR_W, LL_NODE_H, 0, 2, 2, 0);
+
+        p.drawingContext.shadowBlur = 0;
+
+        // Value text
+        p.noStroke();
+        p.fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2]);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(10);
+        p.text(llItems[i].value, x + LL_VAL_W / 2, y + LL_NODE_H / 2);
+
+        // Pointer section content
+        if (isTail) {
+            // Null terminator
+            p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], 160);
+            p.textSize(8);
+            p.textAlign(p.CENTER, p.CENTER);
+            p.text('\u2205', x + LL_VAL_W + LL_PTR_W / 2, y + LL_NODE_H / 2);
+        } else {
+            // Dot indicating pointer
+            p.fill(cr[0], cr[1], cr[2], 170);
+            p.ellipse(x + LL_VAL_W + LL_PTR_W / 2, y + LL_NODE_H / 2, 5, 5);
+
+            let isLastInRow = ((i + 1) % LL_PER_ROW === 0);
+
+            if (!isLastInRow) {
+                // Straight horizontal arrow to next node
+                let ax1 = x + LL_NODE_W;
+                let ax2 = x + LL_NODE_W + LL_GAP_X - 2;
+                let ay  = y + LL_NODE_H / 2;
+                p.stroke(cr[0], cr[1], cr[2], 100);
+                p.strokeWeight(1);
+                p.line(ax1, ay, ax2, ay);
+                p.line(ax2, ay, ax2 - 5, ay - 3);
+                p.line(ax2, ay, ax2 - 5, ay + 3);
+            } else {
+                // Wrap connector: go right, down, left to next row
+                let wx1 = x + LL_NODE_W;
+                let wy1 = y + LL_NODE_H / 2;
+                let wbx = x + LL_NODE_W + 10;           // right bend x
+                let wy2 = y + LL_ROW_H + LL_NODE_H / 2; // next row midpoint
+                let wx3 = LL_START_X;                    // destination x
+
+                p.stroke(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], 90);
+                p.strokeWeight(1);
+                p.line(wx1, wy1, wbx, wy1);             // exit right
+                p.line(wbx, wy1, wbx, wy2);             // go down
+                p.line(wbx, wy2, wx3, wy2);             // go left to node
+                // arrowhead pointing right into next row's first node
+                p.line(wx3, wy2, wx3 + 6, wy2 - 3);
+                p.line(wx3, wy2, wx3 + 6, wy2 + 3);
+            }
+        }
+
+        // Traversal cursor label
+        if (isCursor) {
+            p.noStroke();
+            p.fill(NEON_ORANGE[0], NEON_ORANGE[1], NEON_ORANGE[2]);
+            p.textSize(7);
+            p.textAlign(p.CENTER, p.TOP);
+            p.text('current', x + LL_VAL_W / 2, y + LL_NODE_H + 2);
+        }
+    }
+
+    // Size label bottom-left
+    p.noStroke();
+    p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+    p.textSize(8);
+    p.textAlign(p.LEFT, p.BOTTOM);
+    p.text('nodes: ' + llItems.length, 4, PH - 4);
+
+    llScanlines(p);
+}
+
+function llScanlines(p) {
+    for (let y = 0; y < PH; y += 3) {
+        p.stroke(0, 0, 0, 6);
+        p.strokeWeight(1);
+        p.line(0, y, PW, y);
+    }
+}
+
+// ===================================================================
+// DRAW: BST
+// ===================================================================
+
+function drawBST(p) {
+    p.background(VOID_BLACK[0], VOID_BLACK[1], VOID_BLACK[2]);
+
+    p.stroke(GRID_DARK[0], GRID_DARK[1], GRID_DARK[2]);
+    p.strokeWeight(0.5);
+    for (let x = 0; x < PW; x += 30) p.line(x, 0, x, PH);
+    for (let y = 0; y < PH; y += 30) p.line(0, y, PW, y);
+
+    if (!bstRoot) {
+        p.noStroke();
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textSize(10);
+        p.text('Empty tree\nInsert to begin', PW / 2, PH / 2);
+        llScanlines(p);
+        return;
+    }
+
+    if (bstSearchTimer > 0) bstSearchTimer--;
+
+    drawBSTNode(p, bstRoot, PW / 2, 26, PW / 4, 0);
+
+    // Inorder progress bar at bottom
+    if (bstInorderIdx >= 0 && bstInorderSeq.length > 0) {
+        let progress = (bstInorderIdx + 1) / bstInorderSeq.length;
+        let barW = PW - 20;
+        p.noStroke();
+        p.fill(GRID_DARK[0] + 10, GRID_DARK[1] + 10, GRID_DARK[2] + 10);
+        p.rect(10, PH - 12, barW, 6, 2);
+        p.fill(NEON_GREEN[0], NEON_GREEN[1], NEON_GREEN[2], 180);
+        p.rect(10, PH - 12, barW * progress, 6, 2);
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.textSize(7);
+        p.textAlign(p.LEFT, p.BOTTOM);
+        p.text('inorder: ' + (bstInorderIdx + 1) + '/' + bstInorderSeq.length, 10, PH - 14);
+    }
+
+    llScanlines(p);
+}
+
+function drawBSTNode(p, node, x, y, xOff, depth) {
+    if (!node) return;
+    const R = 15;
+
+    // Draw edges before nodes so nodes render on top
+    if (node.left) {
+        let cx = x - xOff, cy = y + 46;
+        p.stroke(GRID_DARK[0] + 18, GRID_DARK[1] + 18, GRID_DARK[2] + 18);
+        p.strokeWeight(1);
+        p.line(x, y + R, cx, cy - R);
+        drawBSTNode(p, node.left,  cx, cy, Math.max(xOff / 2, 13), depth + 1);
+    }
+    if (node.right) {
+        let cx = x + xOff, cy = y + 46;
+        p.stroke(GRID_DARK[0] + 18, GRID_DARK[1] + 18, GRID_DARK[2] + 18);
+        p.strokeWeight(1);
+        p.line(x, y + R, cx, cy - R);
+        drawBSTNode(p, node.right, cx, cy, Math.max(xOff / 2, 13), depth + 1);
+    }
+
+    // State for this node
+    let onSearch    = bstSearchTimer > 0 && bstSearchPath.includes(node.value);
+    let isTarget    = onSearch && bstSearchPath[bstSearchPath.length - 1] === node.value;
+    let isCurrent   = bstInorderIdx >= 0 && bstInorderSeq[bstInorderIdx] === node.value;
+    let wasVisited  = bstInorderIdx > 0  && bstInorderSeq.slice(0, bstInorderIdx).includes(node.value);
+
+    let cr = isTarget   ? NEON_MAGENTA :
+             isCurrent  ? NEON_GREEN   :
+             onSearch   ? NEON_ORANGE  :
+             wasVisited ? [0, 100, 80] :
+             NEON_CYAN;
+
+    let lit = isTarget || isCurrent || onSearch;
+    p.drawingContext.shadowBlur  = lit ? 16 : 5;
+    p.drawingContext.shadowColor = `rgba(${cr[0]},${cr[1]},${cr[2]},0.4)`;
+
+    p.noFill();
+    p.stroke(cr[0], cr[1], cr[2], lit ? 240 : (wasVisited ? 100 : 130));
+    p.strokeWeight(lit ? 2 : 1);
+    p.ellipse(x, y, R * 2, R * 2);
+
+    p.drawingContext.shadowBlur = 0;
+    p.noStroke();
+    p.fill(TEXT_BRIGHT[0], TEXT_BRIGHT[1], TEXT_BRIGHT[2]);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(9);
+    p.text(node.value, x, y);
+
+    // L / R child pointer labels on edges (faint, first 2 depths only)
+    if (depth < 2) {
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], 60);
+        p.textSize(7);
+        if (node.left) {
+            p.textAlign(p.RIGHT, p.CENTER);
+            p.text('L', x - R - 4, y + 20);
+        }
+        if (node.right) {
+            p.textAlign(p.LEFT, p.CENTER);
+            p.text('R', x + R + 4, y + 20);
+        }
+    }
+
+    if (depth === 0) {
+        p.fill(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2]);
+        p.textSize(7);
+        p.textAlign(p.CENTER, p.BOTTOM);
+        p.text('ROOT', x, y - R - 2);
+    }
+}
+
+// ===================================================================
+// BST DATA STRUCTURE (JavaScript)
+// ===================================================================
+
+function bstInsertNode(value) {
+    let node = { value, left: null, right: null };
+    let comps = 0;
+    if (!bstRoot) { bstRoot = node; bstSize++; return comps; }
+    let cur = bstRoot;
+    while (true) {
+        comps++;
+        if (value < cur.value) {
+            if (!cur.left)  { cur.left  = node; bstSize++; return comps; }
+            cur = cur.left;
+        } else if (value > cur.value) {
+            if (!cur.right) { cur.right = node; bstSize++; return comps; }
+            cur = cur.right;
+        } else {
+            return comps; // duplicate — skip
+        }
+    }
+}
+
+function bstSearchNode(target) {
+    let comps = 0, path = [], cur = bstRoot;
+    while (cur) {
+        comps++;
+        path.push(cur.value);
+        if (target === cur.value) return { found: true, comps, path };
+        cur = target < cur.value ? cur.left : cur.right;
+    }
+    return { found: false, comps, path };
+}
+
+function bstCollectInorder(node, result) {
+    if (!node) return;
+    bstCollectInorder(node.left,  result);
+    result.push(node.value);
+    bstCollectInorder(node.right, result);
+}
+
+// ===================================================================
+// TOP-BAR CONTROLS
+// ===================================================================
+
+function generateIncoming(n) {
+    incoming = [];
+    for (let i = 0; i < n; i++)
+        incoming.push({ id: nextId++, value: Math.floor(Math.random() * 88) + 10 });
+    updateUI();
+}
+
+function insertSortedData() {
+    incoming = [];
+    for (let i = 1; i <= 10; i++)
+        incoming.push({ id: nextId++, value: i * 10 });
+    updateUI();
+}
+
+function resetAll() {
+    incoming = [];
+    llItems = []; llTraverseIdx = -1; llTraverseTimer = 0;
+    llSearchPath = []; llSearchTimer = 0;
+    bstRoot = null; bstSize = 0;
+    bstSearchPath = []; bstSearchTimer = 0;
+    bstInorderSeq = []; bstInorderIdx = -1;
+    setStatus('ll', '');
+    setStatus('bst', '');
+    updateUI();
+}
+
+// ===================================================================
+// LINKED LIST OPERATIONS
+// ===================================================================
+
+function llInsertTail() {
+    if (!incoming.length) return;
+    let item = incoming.shift();
+    llItems.push(item);
+    llTraverseIdx = -1;
+    setStatus('ll', `Insert Tail v=${item.value} — walked ${llItems.length - 1} node(s) to reach tail`);
+    updateUI();
+}
+
+function llInsertHead() {
+    if (!incoming.length) return;
+    let item = incoming.shift();
+    llItems.unshift(item);
+    llTraverseIdx = -1;
+    setStatus('ll', `Insert Head v=${item.value} — O(1): head pointer updated, no walking`);
+    updateUI();
+}
+
+function llRemoveHead() {
+    if (!llItems.length) return;
+    let removed = llItems.shift();
+    llTraverseIdx = -1;
+    let next = llItems.length ? `new head = v=${llItems[0].value}` : 'list now empty';
+    setStatus('ll', `Removed Head v=${removed.value} — ${next}`);
+    updateUI();
+}
+
+function llStepTraverse() {
+    if (!llItems.length) return;
+    if (llTraverseIdx < 0) {
+        // Start traversal
+        llTraverseIdx = 0;
+        setStatus('ll', `Traverse: at HEAD — v=${llItems[0].value} (node 1 of ${llItems.length})`);
+    } else if (llTraverseIdx < llItems.length - 1) {
+        llTraverseIdx++;
+        setStatus('ll',
+            `Traverse: step ${llTraverseIdx + 1} of ${llItems.length} — v=${llItems[llTraverseIdx].value} ` +
+            `| followed ${llTraverseIdx} pointer(s)`);
+    } else {
+        // Reached tail — next step is null
+        llTraverseIdx = -1;
+        setStatus('ll', `Traverse: reached \u2205 null — all ${llItems.length} node(s) visited`);
+    }
+    llTraverseTimer = 200;
+    updateUI();
+}
+
+function llSearchUI() {
+    let raw = prompt('Search for value (10\u201398):');
+    if (raw === null) return;
+    let target = parseInt(raw);
+    if (isNaN(target)) return;
+
+    let visited = [];
+    for (let i = 0; i < llItems.length; i++) {
+        visited.push(i);
+        if (llItems[i].value === target) {
+            llSearchPath  = visited;
+            llSearchTimer = 160;
+            setStatus('ll',
+                `Search ${target}: FOUND at position ${i + 1} ` +
+                `(${visited.length} comparison(s) — O(n) linear walk)`);
+            updateUI();
+            return;
+        }
+    }
+    llSearchPath  = visited;
+    llSearchTimer = 140;
+    setStatus('ll',
+        `Search ${target}: NOT FOUND ` +
+        `(checked all ${visited.length} node(s) — O(n))`);
+    updateUI();
+}
+
+// ===================================================================
+// BST OPERATIONS
+// ===================================================================
+
+function bstInsert() {
+    if (!incoming.length) return;
+    let item  = incoming.shift();
+    let comps = bstInsertNode(item.value);
+    bstInorderIdx = -1;   // reset inorder traversal on structural change
+    setStatus('bst', `Insert v=${item.value}: ${comps} comparison(s), size now ${bstSize}`);
+    updateUI();
+}
+
+function bstSearchUI() {
+    let raw = prompt('Search for value (0\u2013100):');
+    if (raw === null) return;
+    let target = parseInt(raw);
+    if (isNaN(target)) return;
+
+    let result = bstSearchNode(target);
+    bstSearchPath  = result.path;
+    bstSearchTimer = 140;
+    bstInorderIdx  = -1;
+    setStatus('bst',
+        `Search ${target}: ${result.found ? 'FOUND' : 'NOT FOUND'} ` +
+        `(${result.comps} comparison(s), path: [${result.path.join('\u2192')}])`);
+    updateUI();
+}
+
+function bstStepInorder() {
+    if (!bstRoot) return;
+
+    // First click or reset: build sequence, start at step 0
+    if (bstInorderIdx < 0) {
+        bstInorderSeq = [];
+        bstCollectInorder(bstRoot, bstInorderSeq);
+        bstInorderIdx = 0;
+        setStatus('bst',
+            `Inorder step 1/${bstInorderSeq.length}: visiting v=${bstInorderSeq[0]} ` +
+            `(sorted sequence starts here)`);
+        updateUI();
+        return;
+    }
+
+    if (bstInorderIdx < bstInorderSeq.length - 1) {
+        bstInorderIdx++;
+        setStatus('bst',
+            `Inorder step ${bstInorderIdx + 1}/${bstInorderSeq.length}: ` +
+            `v=${bstInorderSeq[bstInorderIdx]} ` +
+            `| so far: [${bstInorderSeq.slice(0, bstInorderIdx + 1).join(', ')}]`);
+    } else {
+        // Complete
+        let seq = bstInorderSeq.slice();
+        bstInorderIdx = -1;
+        setStatus('bst',
+            `Inorder complete: [${seq.join(', ')}] \u2014 note: sorted order!`);
+    }
+    updateUI();
+}
+
+// ===================================================================
+// UI HELPERS
+// ===================================================================
+
+function setStatus(which, msg) {
+    document.getElementById(which + '-status').textContent = msg;
+}
+
+function updateUI() {
+    updateIncomingInfo();
+    document.getElementById('ll-ops').textContent  = 'size: ' + llItems.length;
+    document.getElementById('bst-ops').textContent = 'size: ' + bstSize;
+    enableButtons();
+}
+
+function updateIncomingInfo() {
+    let el = document.getElementById('incoming-info');
+    if (!incoming.length) {
+        el.textContent = 'No specimens queued';
+        return;
+    }
+    let vals = incoming.slice(0, 5).map(i => i.value);
+    let more = incoming.length > 5 ? ` ... +${incoming.length - 5} more` : '';
+    el.textContent = `${incoming.length} queued: [${vals.join(', ')}${more}]`;
+}
+
+function enableButtons() {
+    let has   = incoming.length > 0;
+    let hasLL  = llItems.length > 0;
+    let hasBST = bstSize > 0;
+    document.getElementById('btn-ll-tail').disabled   = !has;
+    document.getElementById('btn-ll-head').disabled   = !has;
+    document.getElementById('btn-ll-remove').disabled = !hasLL;
+    document.getElementById('btn-ll-step').disabled   = !hasLL;
+    document.getElementById('btn-ll-search').disabled = !hasLL;
+    document.getElementById('btn-bst-insert').disabled  = !has;
+    document.getElementById('btn-bst-search').disabled  = !hasBST;
+    document.getElementById('btn-bst-inorder').disabled = !hasBST;
+}
+</script>
+</body>
+</html>
