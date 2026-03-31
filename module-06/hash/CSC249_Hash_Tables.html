@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 249 — Hash Tables</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0f14;
+    --surface: #151921;
+    --surface2: #1c2230;
+    --text: #e8eaf0;
+    --text-dim: #7a8299;
+    --accent: #f59e0b;
+    --accent2: #3b82f6;
+    --accent3: #10b981;
+    --red: #ef4444;
+    --code-bg: #1a1f2e;
+    --border: #2a3040;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .deck {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5vh 8vw;
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  .slide.active {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: all;
+  }
+
+  .slide.exiting {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+
+  /* Typography */
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 1.15;
+    margin-bottom: 0.4em;
+    color: var(--text);
+  }
+
+  h1 .accent { color: var(--accent); }
+  h1 .blue { color: var(--accent2); }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    line-height: 1.25;
+    margin-bottom: 0.6em;
+  }
+
+  .subtitle {
+    font-size: clamp(1rem, 1.8vw, 1.4rem);
+    color: var(--text-dim);
+    margin-bottom: 1.5em;
+    max-width: 50ch;
+    line-height: 1.6;
+  }
+
+  p, li {
+    font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 64ch;
+  }
+
+  .content p + p { margin-top: 1em; }
+
+  ul { list-style: none; padding-left: 0; }
+
+  ul li {
+    position: relative;
+    padding-left: 1.6em;
+    margin-bottom: 0.7em;
+  }
+
+  ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0.25em 0.7em;
+    border-radius: 3px;
+    margin-bottom: 1.2em;
+    background: rgba(245, 158, 11, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+
+  .tag.blue {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--accent2);
+    border-color: rgba(59, 130, 246, 0.25);
+  }
+
+  .tag.green {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--accent3);
+    border-color: rgba(16, 185, 129, 0.25);
+  }
+
+  .tag.red {
+    background: rgba(239, 68, 68, 0.12);
+    color: var(--red);
+    border-color: rgba(239, 68, 68, 0.25);
+  }
+
+  /* Code blocks */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2em 1.5em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+    line-height: 1.65;
+    overflow-x: auto;
+    margin: 1em 0;
+    max-width: 56ch;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: var(--accent2);
+  }
+
+  .kw { color: #c084fc; }
+  .str { color: #34d399; }
+  .cmt { color: #5a6578; font-style: italic; }
+  .num { color: var(--accent); }
+  .fn { color: #60a5fa; }
+
+  /* Two-column layout */
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4vw;
+    align-items: start;
+    margin-top: 0.5em;
+  }
+
+  .cols.uneven { grid-template-columns: 1.2fr 0.8fr; }
+
+  /* Diagram boxes */
+  .bin-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6em;
+    margin-top: 1em;
+  }
+
+  .bin-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .bin-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+    width: 3.5em;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .bin-arrow {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .bin-chain {
+    display: flex;
+    gap: 0.35em;
+    flex-wrap: wrap;
+  }
+
+  .bin-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.25em 0.6em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+
+  .bin-node.empty {
+    color: var(--text-dim);
+    border-style: dashed;
+  }
+
+  .bin-node + .bin-node::before {
+    content: '→';
+    color: var(--text-dim);
+    margin-right: 0.35em;
+  }
+
+  /* Big number */
+  .big-o {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(4rem, 10vw, 9rem);
+    color: var(--accent);
+    line-height: 1;
+    margin: 0.2em 0;
+    letter-spacing: -0.02em;
+  }
+
+  /* Comparison table */
+  .compare-table {
+    border-collapse: collapse;
+    margin-top: 1em;
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+    width: 100%;
+    max-width: 700px;
+  }
+
+  .compare-table th {
+    text-align: left;
+    padding: 0.6em 1em;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .compare-table td {
+    padding: 0.6em 1em;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  .compare-table tr:last-child td { border-bottom: none; }
+
+  /* Highlight box */
+  .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--accent);
+    padding: 1em 1.4em;
+    border-radius: 0 6px 6px 0;
+    margin: 1.2em 0;
+    max-width: 56ch;
+  }
+
+  .callout.blue { border-left-color: var(--accent2); }
+  .callout.green { border-left-color: var(--accent3); }
+  .callout.red { border-left-color: var(--red); }
+
+  .callout p {
+    font-size: clamp(0.85rem, 1.3vw, 1.05rem);
+    margin: 0;
+  }
+
+  /* Salt visual */
+  .salt-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+    margin: 1em 0;
+  }
+
+  .salt-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+  }
+
+  .salt-box {
+    padding: 0.3em 0.7em;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .salt-box.pw { background: rgba(59, 130, 246, 0.15); color: var(--accent2); border: 1px solid rgba(59, 130, 246, 0.3); }
+  .salt-box.salt { background: rgba(245, 158, 11, 0.15); color: var(--accent); border: 1px solid rgba(245, 158, 11, 0.3); }
+  .salt-box.hash { background: rgba(16, 185, 129, 0.15); color: var(--accent3); border: 1px solid rgba(16, 185, 129, 0.3); }
+  .salt-box.bad { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid rgba(239, 68, 68, 0.3); }
+
+  .salt-arrow { color: var(--text-dim); }
+
+  /* Navigation */
+  .nav {
+    position: fixed;
+    bottom: 2.5vh;
+    right: 4vw;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    z-index: 100;
+  }
+
+  .nav-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: var(--surface);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .slide-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    min-width: 4em;
+    text-align: center;
+  }
+
+  .progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  /* Title slide special */
+  .title-slide {
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .title-slide h1 {
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    margin-bottom: 0.15em;
+  }
+
+  .course-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(0.85rem, 1.2vw, 1rem);
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.5em;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .slide { padding: 4vh 6vw; }
+    .cols { grid-template-columns: 1fr; gap: 2em; }
+    .cols.uneven { grid-template-columns: 1fr; }
+  }
+
+  /* Section divider slides */
+  .divider {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+
+  .divider h1 { margin-bottom: 0.2em; }
+  .divider .subtitle { margin: 0 auto; }
+
+  /* Waffle House joke styling */
+  .aside {
+    font-style: italic;
+    color: var(--text-dim);
+    font-size: 0.9em;
+    margin-top: 0.5em;
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide title-slide active">
+    <div class="course-label">CSC 249 · Data Structures</div>
+    <h1><span class="accent">Hash</span> Tables</h1>
+    <p class="subtitle">From convention check-in lines to password security — one data structure, two applications.</p>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide">
+    <span class="tag">Motivation</span>
+    <h2>One line is slow</h2>
+    <div class="cols">
+      <div class="content">
+        <p>Picture a convention check-in with 500 attendees and a single line. Everyone waits behind everyone else.</p>
+        <p>This is <code>O(n)</code> — the time to find your badge scales linearly with the number of people.</p>
+        <p>The obvious fix: split into multiple lines. But <em>how</em> you split them matters.</p>
+      </div>
+      <div>
+        <div class="callout">
+          <p>The question isn't "should we have multiple lines?" — it's "what rule decides which line you go to?"</p>
+          <p style="margin-top:0.5em">That rule is a <strong>hash function</strong>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: Convention Bins -->
+  <div class="slide">
+    <span class="tag">Analogy</span>
+    <h2>Check-in lines are hash tables</h2>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:0.8em">A standard convention system: two lines sorted by last name.</p>
+        <div class="bin-demo">
+          <div class="bin-row">
+            <span class="bin-label">A–J</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">Anderson</span>
+              <span class="bin-node">Banks</span>
+              <span class="bin-node">James</span>
+              <span class="bin-node">Johnson</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">K–Z</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">Kristol</span>
+              <span class="bin-node">Young</span>
+              <span class="bin-node">Zappa</span>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:1em">Each line is a <strong>linked list</strong>. The collection of lines is an <strong>array</strong>. Together: a hash table.</p>
+      </div>
+      <div>
+        <p style="margin-bottom:0.8em">A <em>bad</em> split makes the structure useless:</p>
+        <div class="bin-demo">
+          <div class="bin-row">
+            <span class="bin-label">A–Y</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">Anderson</span>
+              <span class="bin-node">Banks</span>
+              <span class="bin-node">James</span>
+              <span class="bin-node">Johnson</span>
+              <span class="bin-node">Kristol</span>
+              <span class="bin-node">Young</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">Z</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">Zappa</span>
+            </div>
+          </div>
+        </div>
+        <div class="callout red" style="margin-top:1em">
+          <p>Unbalanced bins = one line does all the work. This is the hash table equivalent of a bad hash function.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: The Tradeoff -->
+  <div class="slide">
+    <span class="tag">Design</span>
+    <h2>The fundamental tradeoff</h2>
+    <div class="content">
+      <p>How you divide your bins determines two things:</p>
+      <ul>
+        <li><strong>Wasted bins</strong> — empty lines with nobody in them (wasted memory)</li>
+        <li><strong>Long chains</strong> — too many items in one bin (slow lookups)</li>
+      </ul>
+      <p>Would 26 lines (one per letter) be 26× faster? Not if there's a Johnson Family Reunion — the J line would be longer than all the rest combined.</p>
+      <div class="callout" style="margin-top:1em">
+        <p>A good hash function distributes items <strong>evenly</strong> across bins. That's the whole game.</p>
+      </div>
+      <p>This tradeoff — memory vs. speed, bin count vs. chain length — is the core design problem of every hash table implementation.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: Structure Diagram -->
+  <div class="slide">
+    <span class="tag blue">Structure</span>
+    <h2>Hash Table = Array of Linked Lists</h2>
+    <div class="cols">
+      <div>
+        <div class="bin-demo">
+          <div class="bin-row">
+            <span class="bin-label">[0]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">apple</span>
+              <span class="bin-node">avocado</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">[1]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">banana</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">[2]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">cantaloupe</span>
+              <span class="bin-node">cherry</span>
+              <span class="bin-node">coconut</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">[3]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node empty">∅</span>
+            </div>
+          </div>
+          <div class="bin-row">
+            <span class="bin-label">[4]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">elderberry</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p>Each key goes through a <strong>hash function</strong> that returns an index. The item is stored in the linked list at that index.</p>
+        <p style="margin-top:0.8em">Works with any key type — strings, numbers, objects — as long as you can hash it to an integer.</p>
+        <p style="margin-top:0.8em">When two keys hash to the same index (like "apple" and "avocado"), that's a <strong>collision</strong>. The linked list at that bin handles it by chaining.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: O(1) -->
+  <div class="slide">
+    <span class="tag blue">Performance</span>
+    <h2>Average-case access time</h2>
+    <div class="cols">
+      <div>
+        <div class="big-o">O(1)</div>
+        <p>When collisions are rare, accessing an item by key takes roughly the same time as an array lookup — regardless of how many items are stored.</p>
+      </div>
+      <div>
+        <p style="margin-bottom:0.6em">Compare to alternatives:</p>
+        <table class="compare-table">
+          <tr><th>Structure</th><th>Lookup</th></tr>
+          <tr><td>Unsorted array</td><td><code>O(n)</code></td></tr>
+          <tr><td>Sorted array</td><td><code>O(log n)</code></td></tr>
+          <tr><td>Hash table (avg)</td><td><code>O(1)</code></td></tr>
+          <tr><td>Hash table (worst)</td><td><code>O(n)</code></td></tr>
+        </table>
+        <p style="margin-top:0.8em; font-size: 0.9em; color: var(--text-dim)">Worst case: every key hashes to the same bin. This is why hash function quality matters.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Simple Hash Functions -->
+  <div class="slide">
+    <span class="tag blue">Implementation</span>
+    <h2>Simple hash functions</h2>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:0.5em"><strong>Name → line (convention style)</strong></p>
+        <pre><span class="cmt">// 2 bins: A-J and K-Z</span>
+<span class="fn">map</span>(name) → first_letter &lt; <span class="str">'K'</span> ? <span class="num">0</span> : <span class="num">1</span></pre>
+        <p>2 bins = 2 linked lists. <code>O(n/2)</code> is still <code>O(n)</code>, but for a finite crowd, twice as fast beats nothing.</p>
+      </div>
+      <div>
+        <p style="margin-bottom:0.5em"><strong>Student ID → bin (modulo style)</strong></p>
+        <pre><span class="cmt">// 10 bins using modulo</span>
+<span class="fn">map</span>(student_id) → student_id <span class="kw">%</span> <span class="num">10</span></pre>
+        <p>Works with any size ID. But if all IDs end in zero, every student lands in bin 0. The hash function must match your data distribution.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: Collision Handling -->
+  <div class="slide">
+    <span class="tag blue">Implementation</span>
+    <h2>Handling collisions</h2>
+    <div class="cols">
+      <div>
+        <h2 style="font-size:1.3rem; margin-bottom:0.5em">Chaining</h2>
+        <p>Collisions are stored in the same bin, in a linked list. Walk the chain to find your item.</p>
+        <p style="margin-top:0.5em">This is what we focus on in this class — it's the easiest to understand and implement.</p>
+        <div class="bin-demo" style="margin-top:0.8em">
+          <div class="bin-row">
+            <span class="bin-label">[3]</span>
+            <span class="bin-arrow">→</span>
+            <div class="bin-chain">
+              <span class="bin-node">key_A</span>
+              <span class="bin-node">key_B</span>
+              <span class="bin-node">key_C</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h2 style="font-size:1.3rem; margin-bottom:0.5em">Open addressing (probing)</h2>
+        <p>If a collision would occur, probe for a different empty bin.</p>
+        <ul>
+          <li><strong>Linear probing</strong>: try bin+1, bin+2, ...</li>
+          <li><strong>Quadratic probing</strong>: try bin+1², bin+2², ...</li>
+        </ul>
+        <p style="margin-top:0.5em; color: var(--text-dim)">Different implementation, same interface. You'll encounter these in job interviews.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: Common Uses -->
+  <div class="slide">
+    <span class="tag green">Workforce</span>
+    <h2>You already use hash tables daily</h2>
+    <div class="content">
+      <p>In Python, a <code>dict</code> is a hash table. In C++, <code>std::unordered_map</code> is a hash table.</p>
+      <pre><span class="cmt"># Python — this is a hash table</span>
+definition_of = {}
+definition_of[<span class="str">"doe"</span>]  = <span class="str">"a deer, a female deer"</span>
+definition_of[<span class="str">"far"</span>]  = <span class="str">"a long long way to go"</span></pre>
+      <pre><span class="cmt">// C++ — this is also a hash table</span>
+unordered_map&lt;<span class="kw">string</span>, <span class="kw">string</span>&gt; definition_of;
+definition_of[<span class="str">"doe"</span>]  = <span class="str">"a deer, a female deer"</span>;
+definition_of[<span class="str">"far"</span>]  = <span class="str">"a long long way to go"</span>;</pre>
+      <p>The older name for this pattern is <strong>associative array</strong> — an array where the index is a string instead of a number. The hash function converts that string to an actual array index under the hood.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: Divider — Cryptography -->
+  <div class="slide divider">
+    <span class="tag red">Application</span>
+    <h1>Hashing in <span class="accent">Cryptography</span></h1>
+    <p class="subtitle">Same concept, different application. The hash function that assigns bins can also protect passwords.</p>
+  </div>
+
+  <!-- SLIDE 11: The Problem -->
+  <div class="slide">
+    <span class="tag red">Security</span>
+    <h2>No system is 100% secure</h2>
+    <div class="content">
+      <p>Databases get breached. It happens to companies of every size. The question isn't whether your user database will ever be compromised — it's what the attacker gets when it is.</p>
+      <p>If the database stores passwords in <strong>cleartext</strong> (unencrypted), the attacker now has:</p>
+      <ul>
+        <li>Usernames (typically email addresses)</li>
+        <li>The exact password each person used on your site</li>
+      </ul>
+      <p>Since people reuse passwords, the attacker can now try those email + password combinations on banking sites, email providers, and everything else.</p>
+      <div class="callout red">
+        <p>The 2015 Ashley Madison breach leaked customer billing information. Users who expected anonymity were blackmailed. Cleartext storage made it worse than it had to be.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: Password Hashing -->
+  <div class="slide">
+    <span class="tag red">Security</span>
+    <h2>Password hashing: store the hash, not the password</h2>
+    <div class="content">
+      <p>Hash functions have a critical property: they are <strong>one-way</strong>.</p>
+      <ul>
+        <li>Hashing a key always returns the <strong>same</strong> hash value</li>
+        <li>But the hash value is <strong>not enough information</strong> to recover the original key</li>
+      </ul>
+      <p>This means you can answer "did they type the correct password?" without ever storing the password itself.</p>
+      <div class="callout green">
+        <p><strong>Register:</strong> hash the password, store the hash.<br>
+        <strong>Login:</strong> hash what they typed, compare to the stored hash.<br>
+        <strong>Match?</strong> Correct password. <strong>No match?</strong> Wrong password.<br>
+        <strong>At no point is the actual password stored anywhere.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13: Password Hashing — Code -->
+  <div class="slide">
+    <span class="tag red">Security</span>
+    <h2>The verification flow</h2>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:0.4em; color:var(--accent2)"><strong>Python</strong></p>
+        <pre>username = <span class="fn">input</span>(<span class="str">"username: "</span>)
+login_pw = <span class="fn">input</span>(<span class="str">"password: "</span>)
+
+login_hash = <span class="fn">hash_password</span>(login_pw)
+stored_hash = db.<span class="fn">get_hash</span>(username)
+
+<span class="kw">if</span> login_hash == stored_hash:
+    correct_login = <span class="kw">True</span></pre>
+      </div>
+      <div>
+        <p style="margin-bottom:0.4em; color:var(--accent2)"><strong>C++</strong></p>
+        <pre><span class="kw">string</span> username, login_pw;
+cin >> username >> login_pw;
+
+<span class="kw">auto</span> login_hash =
+    <span class="fn">hash_password</span>(login_pw);
+<span class="kw">auto</span> stored_hash =
+    db.<span class="fn">get_hash</span>(username);
+
+<span class="kw">if</span> (login_hash == stored_hash) {
+    correct_login = <span class="kw">true</span>;
+}</pre>
+      </div>
+    </div>
+    <p style="margin-top:0.8em; color:var(--text-dim)">The password never touches the database. Only the hash does.</p>
+  </div>
+
+  <!-- SLIDE 14: Rainbow Tables -->
+  <div class="slide">
+    <span class="tag red">Attack</span>
+    <h2>The rainbow table problem</h2>
+    <div class="content">
+      <p>Hash functions are one-way, but an attacker can hash millions of common passwords and build a lookup table:</p>
+      <table class="compare-table" style="max-width:550px">
+        <tr><th>Password</th><th>Hash</th></tr>
+        <tr><td><code>123456</code></td><td><code style="color:var(--text-dim)">e10adc3949...f883e</code></td></tr>
+        <tr><td><code>password</code></td><td><code style="color:var(--text-dim)">5f4dcc3b5a...b8327</code></td></tr>
+        <tr><td><code>qwerty</code></td><td><code style="color:var(--text-dim)">d8578edf84...5ca4</code></td></tr>
+        <tr><td><code>dragon</code></td><td><code style="color:var(--text-dim)">8621ffdbc5...3db3</code></td></tr>
+      </table>
+      <p style="margin-top:0.8em">If your stored hash matches any entry in this table, the attacker knows your password. And if 500 users all chose "123456", cracking one cracks all 500.</p>
+      <div class="callout red">
+        <p>This is the collision problem from hash tables, applied to security: identical inputs produce identical outputs. We need a way to make identical passwords produce <strong>different</strong> hashes.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15: Salting Divider -->
+  <div class="slide divider">
+    <span class="tag green">Defense</span>
+    <h1>Hashing <span class="accent">&</span> Salting</h1>
+    <p class="subtitle">Add a pinch of randomness so identical passwords never produce identical hashes.</p>
+    <p class="aside">(but not smothered and covered)</p>
+  </div>
+
+  <!-- SLIDE 16: Salting — How It Works -->
+  <div class="slide">
+    <span class="tag green">Defense</span>
+    <h2>How salting works</h2>
+    <div class="cols">
+      <div>
+        <p style="margin-bottom:0.5em"><strong>Registration:</strong></p>
+        <ul>
+          <li>User enters username + password</li>
+          <li>Generate a random <strong>salt</strong> string</li>
+          <li>Concatenate: <code>password + salt</code></li>
+          <li>Hash the combined string</li>
+          <li>Store the hash <strong>and</strong> the salt</li>
+        </ul>
+      </div>
+      <div>
+        <p style="margin-bottom:0.5em"><strong>Login:</strong></p>
+        <ul>
+          <li>User enters their password</li>
+          <li>Load the stored salt for that user</li>
+          <li>Concatenate: <code>password + salt</code></li>
+          <li>Hash the combined string</li>
+          <li>Compare to stored hash</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout green" style="margin-top:1.2em">
+      <p>The salt is not secret — it's stored right next to the hash. Its purpose isn't secrecy. Its purpose is <strong>uniqueness</strong>: every user gets a different salt, so identical passwords produce different hashes.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 17: Salting — Visual -->
+  <div class="slide">
+    <span class="tag green">Defense</span>
+    <h2>Salting in action</h2>
+    <div class="content">
+      <p style="margin-bottom:0.8em"><strong>User "bob" registers with password "123456":</strong></p>
+      <div class="salt-flow">
+        <div class="salt-row">
+          <span class="salt-box pw">"123456"</span>
+          <span class="salt-arrow">+</span>
+          <span class="salt-box salt">"$.Qwe4k"</span>
+          <span class="salt-arrow">→ hash →</span>
+          <span class="salt-box hash">a7f29c...</span>
+        </div>
+      </div>
+      <p style="margin:0.8em 0"><strong>User "carol" registers with the same password "123456":</strong></p>
+      <div class="salt-flow">
+        <div class="salt-row">
+          <span class="salt-box pw">"123456"</span>
+          <span class="salt-arrow">+</span>
+          <span class="salt-box salt">"mK9#xPz"</span>
+          <span class="salt-arrow">→ hash →</span>
+          <span class="salt-box hash">3e81d4...</span>
+        </div>
+      </div>
+      <p style="margin-top:1em">Same password. Different salts. <strong>Completely different hashes.</strong></p>
+      <p>An attacker who cracks bob's hash learns nothing about carol's account.</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 18: Why It Defeats Rainbow Tables -->
+  <div class="slide">
+    <span class="tag green">Defense</span>
+    <h2>Why salting defeats rainbow tables</h2>
+    <div class="content">
+      <p>Without salting, an attacker precomputes hashes for common passwords once, then matches against every user. One table cracks millions of accounts.</p>
+      <p>With salting, the attacker would need to run the hash function on every combination of:</p>
+      <ul>
+        <li>Every possible password they might use</li>
+        <li>× Every possible salt</li>
+      </ul>
+      <p>With an 8-character alphanumeric salt (a–z, A–Z, 0–9 = 62 characters), that's 62⁸ ≈ <strong>218 trillion</strong> additional hash computations per password guess.</p>
+      <div class="callout">
+        <p>Modern production systems use hash functions like <strong>bcrypt</strong> and <strong>Argon2</strong> that are intentionally slow to compute — adding maybe one second per login attempt. That's nothing for a real user. But for an attacker trying billions of combinations, it's a wall.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 19: Connection Table -->
+  <div class="slide">
+    <span class="tag">Synthesis</span>
+    <h2>One concept, two applications</h2>
+    <div class="content">
+      <table class="compare-table" style="max-width:100%">
+        <tr>
+          <th>Concept</th>
+          <th>Hash Table (Data Structure)</th>
+          <th>Password Hashing (Security)</th>
+        </tr>
+        <tr>
+          <td><strong>Hash function</strong></td>
+          <td>Maps key → array index</td>
+          <td>Maps password → fixed output</td>
+        </tr>
+        <tr>
+          <td><strong>Collision</strong></td>
+          <td>Two keys land in same bin</td>
+          <td>Two passwords produce same hash</td>
+        </tr>
+        <tr>
+          <td><strong>One-way?</strong></td>
+          <td>No — you retrieve values</td>
+          <td>Yes — you cannot recover the password</td>
+        </tr>
+        <tr>
+          <td><strong>"Salt" equivalent</strong></td>
+          <td>Load factor / resize strategy</td>
+          <td>Random per-user string</td>
+        </tr>
+        <tr>
+          <td><strong>Goal</strong></td>
+          <td>O(1) average lookup</td>
+          <td>Verify identity without storing secrets</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- SLIDE 20: Lab Preview -->
+  <div class="slide">
+    <span class="tag green">Lab</span>
+    <h2>What you're building next</h2>
+    <div class="content">
+      <p>In the lab assignment, you'll implement this system from scratch in your choice of <strong>C++</strong> or <strong>Python</strong>:</p>
+      <ul>
+        <li><strong>Exercise 1</strong> — Write a hash function that turns strings into numbers</li>
+        <li><strong>Exercise 2</strong> — Build password registration and login using hashed storage</li>
+        <li><strong>Exercise 3</strong> — Add per-user salting so identical passwords produce different hashes</li>
+      </ul>
+      <p style="margin-top:0.8em">This is not a textbook exercise. This is the actual architecture that every production authentication system uses. The only difference between your lab and what runs at a real company is the strength of the hash function.</p>
+      <div class="callout">
+        <p>When a breach headline says "passwords were stored in plaintext" — they skipped what you're about to build. When it says "passwords were hashed and salted" — they did exactly this.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">◂</button>
+  <span class="slide-counter" id="counter">1 / 20</span>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">▸</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+
+  function showSlide(index) {
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'exiting');
+      if (i === index) {
+        s.classList.add('active');
+      }
+    });
+    counter.textContent = `${index + 1} / ${total}`;
+    progress.style.width = `${((index + 1) / total) * 100}%`;
+  }
+
+  function navigate(dir) {
+    const next = current + dir;
+    if (next < 0 || next >= total) return;
+    const prev = current;
+    current = next;
+    if (dir > 0) {
+      slides[prev].classList.add('exiting');
+      slides[prev].classList.remove('active');
+    }
+    showSlide(current);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      navigate(1);
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+      e.preventDefault();
+      navigate(-1);
+    }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) navigate(diff > 0 ? 1 : -1);
+  });
+
+  showSlide(0);
+</script>
+
+</body>
+</html>

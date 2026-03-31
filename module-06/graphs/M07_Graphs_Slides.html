@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC 249 — Graphs: Nodes, Edges, Worlds</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=DM+Sans:wght@400;500;700&display=swap');
+
+  :root {
+    --bg: #0a0e17;
+    --bg2: #111827;
+    --fg: #e2e8f0;
+    --dim: #64748b;
+    --accent: #38bdf8;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --edge: #f59e0b;
+    --danger: #f87171;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  .deck { position: relative; width: 100%; height: 100%; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 6rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .slide-number {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 2rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--dim);
+    z-index: 100;
+  }
+
+  .nav-hint {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 2rem;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--dim);
+    z-index: 100;
+    opacity: 0.5;
+  }
+
+  .course-tag {
+    position: fixed;
+    top: 1.5rem;
+    left: 2rem;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    z-index: 100;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  h1 .accent { color: var(--accent); }
+  h1 .accent2 { color: var(--accent2); }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin-bottom: 1.2rem;
+    color: var(--accent);
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--accent2);
+    margin-bottom: 0.8rem;
+  }
+
+  p, li {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: var(--fg);
+    max-width: 56rem;
+  }
+
+  .subtitle {
+    font-size: 1.4rem;
+    color: var(--dim);
+    text-align: center;
+    max-width: 40rem;
+  }
+
+  pre {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    background: var(--bg2);
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    overflow-x: auto;
+    max-width: 56rem;
+    width: 100%;
+    margin: 1rem 0;
+  }
+
+  .diagram {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    line-height: 1.5;
+    white-space: pre;
+    color: var(--accent);
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+
+  .diagram .node { color: var(--accent); font-weight: 700; }
+  .diagram .edge { color: var(--edge); }
+  .diagram .label { color: var(--accent2); }
+  .diagram .dim { color: var(--dim); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+    max-width: 60rem;
+    width: 100%;
+  }
+
+  .col { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  ul { list-style: none; padding-left: 0; }
+  ul li::before {
+    content: '▸ ';
+    color: var(--accent);
+    font-family: var(--mono);
+  }
+
+  .highlight-box {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(167, 139, 250, 0.08));
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    max-width: 50rem;
+    margin: 1rem 0;
+  }
+
+  .real-world {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    max-width: 52rem;
+  }
+  .rw-card {
+    background: var(--bg2);
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+  }
+  .rw-card h4 {
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--accent3);
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .rw-card p {
+    font-size: 1rem;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+
+  .compare-row {
+    display: flex;
+    gap: 2rem;
+    max-width: 56rem;
+  }
+  .compare-item {
+    flex: 1;
+    background: var(--bg2);
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-top: 3px solid var(--accent);
+  }
+  .compare-item.alt { border-top-color: var(--accent2); }
+  .compare-item h4 {
+    font-family: var(--mono);
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .key-term {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .dim-text { color: var(--dim); }
+
+  .build-preview {
+    display: flex;
+    gap: 2rem;
+    max-width: 56rem;
+  }
+  .build-card {
+    flex: 1;
+    background: var(--bg2);
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .build-card .emoji { font-size: 2rem; margin-bottom: 0.5rem; }
+  .build-card h4 {
+    font-size: 1rem;
+    color: var(--fg);
+    margin-bottom: 0.4rem;
+  }
+  .build-card p { font-size: 0.9rem; color: var(--dim); text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="course-tag">CSC 249 · Data Structures</div>
+<div class="nav-hint">← → arrow keys to navigate</div>
+<div class="slide-number" id="slideNum"></div>
+
+<div class="deck" id="deck">
+
+<!-- ═══════════════════════════════════════════ SLIDE 1: TITLE -->
+<div class="slide">
+  <h1><span class="accent">Graphs</span>: Nodes, Edges, Worlds</h1>
+  <p class="subtitle">The data structure that models connections — maps, networks, game worlds, relationships, and everything in between.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 2: WHAT IS A GRAPH -->
+<div class="slide">
+  <h2>What Is a Graph?</h2>
+  <p style="text-align:center; margin-bottom:1.5rem;">A graph is two things:</p>
+  <div class="two-col">
+    <div class="col" style="align-items:center;">
+      <h3>Vertices (Nodes)</h3>
+      <div class="diagram">
+<span class="node">( A )</span>   <span class="node">( B )</span>
+
+<span class="node">( C )</span>   <span class="node">( D )</span>
+      </div>
+      <p style="font-size:1rem; color:var(--dim); text-align:center;">Things. Places. People. Concepts.</p>
+    </div>
+    <div class="col" style="align-items:center;">
+      <h3>Edges (Connections)</h3>
+      <div class="diagram">
+<span class="node">( A )</span><span class="edge">---</span><span class="node">( B )</span>
+ <span class="edge">|</span>         <span class="edge">|</span>
+<span class="node">( C )</span><span class="edge">---</span><span class="node">( D )</span>
+      </div>
+      <p style="font-size:1rem; color:var(--dim); text-align:center;">Links. Roads. Friendships. Wires.</p>
+    </div>
+  </div>
+  <p style="margin-top:2rem; text-align:center; color:var(--dim);">That's it. Everything else is detail.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 3: REAL WORLD EXAMPLES -->
+<div class="slide">
+  <h2>Graphs Are Everywhere</h2>
+  <div class="real-world">
+    <div class="rw-card">
+      <h4>Maps & Navigation</h4>
+      <p>Cities = vertices. Roads = edges.<br>Google Maps is a graph algorithm.</p>
+    </div>
+    <div class="rw-card">
+      <h4>Social Networks</h4>
+      <p>People = vertices. Friendships = edges.<br>Facebook has 3 billion nodes.</p>
+    </div>
+    <div class="rw-card">
+      <h4>Game Worlds</h4>
+      <p>Rooms = vertices. Doors = edges.<br>Zork, Skyrim, and your homework.</p>
+    </div>
+    <div class="rw-card">
+      <h4>The Internet</h4>
+      <p>Pages = vertices. Links = edges.<br>PageRank made Google a verb.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 4: DIRECTED vs UNDIRECTED -->
+<div class="slide">
+  <h2>Directed vs. Undirected</h2>
+  <div class="compare-row">
+    <div class="compare-item">
+      <h4 style="color:var(--accent);">Undirected</h4>
+      <div class="diagram" style="font-size:1rem; text-align:left;">
+<span class="node">Tokyo</span> <span class="edge">────</span> <span class="node">London</span>
+      </div>
+      <p style="font-size:1rem;">Connection goes both ways.<br>If I can fly Tokyo→London,<br>I can fly London→Tokyo.</p>
+      <p style="font-size:0.9rem; color:var(--dim); margin-top:0.5rem;">Roads, friendships, flight routes</p>
+    </div>
+    <div class="compare-item alt">
+      <h4 style="color:var(--accent2);">Directed</h4>
+      <div class="diagram" style="font-size:1rem; text-align:left;">
+<span class="node">Junior</span> <span class="edge">────▶</span> <span class="node">Senior</span>
+      </div>
+      <p style="font-size:1rem;">Connection is one-way.<br>You can be promoted,<br>but you can't un-promote.</p>
+      <p style="font-size:0.9rem; color:var(--dim); margin-top:0.5rem;">One-way streets, Twitter follows, prerequisites</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 5: WEIGHTED EDGES -->
+<div class="slide">
+  <h2>Weighted Edges</h2>
+  <p style="text-align:center; margin-bottom:1rem;">Edges can carry information — a label, a cost, a distance, a description.</p>
+  <div class="diagram" style="font-size:1.1rem;">
+<span class="node">( Tokyo )</span><span class="edge">──── 6743 mi ────</span><span class="node">( New York )</span>
+    <span class="edge">│</span>                               <span class="edge">│</span>
+  <span class="label">5941 mi</span>                         <span class="label">3425 mi</span>
+    <span class="edge">│</span>                               <span class="edge">│</span>
+<span class="node">( London )</span><span class="edge">──── 10562 mi ───</span><span class="node">( Sydney )</span>
+  </div>
+  <div class="highlight-box" style="margin-top:1rem;">
+    <p style="font-size:1rem;">In our code, edge weights are <span class="key-term">strings</span>. This keeps things flexible — <code>"6743 miles"</code> for distances, <code>"north"</code> for directions, <code>"married to"</code> for relationships. One graph class handles all cases.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 6: VOCABULARY RECAP -->
+<div class="slide">
+  <h2>Vocabulary Check</h2>
+  <div class="two-col" style="max-width:52rem;">
+    <div class="col">
+      <pre style="font-size:0.95rem;">
+<span style="color:var(--accent);">Vertex</span>     a node in the graph
+<span style="color:var(--accent);">Edge</span>       a connection between two vertices
+<span style="color:var(--accent);">Weight</span>     data carried by an edge
+<span style="color:var(--accent);">Directed</span>   edges have a direction (A→B)
+<span style="color:var(--accent);">Undirected</span> edges go both ways (A↔B)
+</pre>
+    </div>
+    <div class="col">
+      <pre style="font-size:0.95rem;">
+<span style="color:var(--accent2);">Path</span>       a sequence of edges from A to B
+<span style="color:var(--accent2);">Cycle</span>      a path that returns to its start
+<span style="color:var(--accent2);">Neighbor</span>   a vertex connected by one edge
+<span style="color:var(--accent2);">Degree</span>     how many edges touch a vertex
+<span style="color:var(--accent2);">Adjacent</span>   two vertices connected by an edge
+</pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 7: PATH & CYCLE -->
+<div class="slide">
+  <h2>Paths and Cycles</h2>
+  <div class="two-col" style="max-width:52rem;">
+    <div class="col" style="align-items:center;">
+      <h3>Path: A → B → D</h3>
+      <div class="diagram" style="font-size:1rem;">
+<span style="color:var(--accent3);">( A )</span><span class="edge">───▶</span><span style="color:var(--accent3);">( B )</span>
+              <span class="edge">│</span>
+              <span class="edge">▼</span>
+ <span class="dim">( C )</span>     <span style="color:var(--accent3);">( D )</span>
+      </div>
+      <p style="font-size:1rem;">A sequence of vertices<br>connected by edges.<br>"How do I get from here to there?"</p>
+    </div>
+    <div class="col" style="align-items:center;">
+      <h3>Cycle: A → B → D → A</h3>
+      <div class="diagram" style="font-size:1rem;">
+<span style="color:var(--edge);">( A )</span><span class="edge">───▶</span><span style="color:var(--edge);">( B )</span>
+ <span class="edge">▲</span>             <span class="edge">│</span>
+ <span class="edge">│</span>             <span class="edge">▼</span>
+ <span class="edge">└─────</span><span style="color:var(--edge);">( D )</span>
+      </div>
+      <p style="font-size:1rem;">A path that ends<br>where it started.<br>"Can I get back home?"</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 8: ADJACENCY LIST -->
+<div class="slide">
+  <h2>How Code Stores a Graph</h2>
+  <h3>The Adjacency List</h3>
+  <div class="two-col" style="max-width:58rem;">
+    <div class="col" style="align-items:center;">
+      <div class="diagram" style="font-size:1rem;">
+<span class="node">( A )</span><span class="edge">───</span><span class="node">( B )</span>
+ <span class="edge">│</span>       <span class="edge">│</span>
+<span class="node">( C )</span><span class="edge">───</span><span class="node">( D )</span>
+      </div>
+    </div>
+    <div class="col">
+      <pre style="font-size:0.95rem;">
+<span style="color:var(--accent);">A</span> → [ B, C ]
+<span style="color:var(--accent);">B</span> → [ A, D ]
+<span style="color:var(--accent);">C</span> → [ A, D ]
+<span style="color:var(--accent);">D</span> → [ B, C ]</pre>
+      <p style="font-size:0.95rem; color:var(--dim);">Each vertex keeps a list of its neighbors.<br>That's all an adjacency list is.</p>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:1rem;">
+    <p style="font-size:1rem;">In our <code>Graph</code> class, this is an <code>unordered_map</code> (C++) or <code>dict</code> (Python) — the vertex is the key, its edge list is the value.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 9: THE CODE -->
+<div class="slide">
+  <h2>Building a Graph in Code</h2>
+  <div class="two-col" style="max-width:60rem;">
+    <div class="col">
+      <h3>C++</h3>
+      <pre style="font-size:0.85rem;">
+Graph flights;
+
+Vertex* tok = flights.AddVertex("Tokyo");
+Vertex* nyc = flights.AddVertex("New York");
+Vertex* lon = flights.AddVertex("London");
+
+flights.AddUndirectedEdge(
+    tok, nyc, "6743 miles");
+flights.AddUndirectedEdge(
+    tok, lon, "5941 miles");
+flights.AddUndirectedEdge(
+    nyc, lon, "3425 miles");</pre>
+    </div>
+    <div class="col">
+      <h3>Python</h3>
+      <pre style="font-size:0.85rem;">
+flights = Graph()
+
+tok = flights.add_vertex("Tokyo")
+nyc = flights.add_vertex("New York")
+lon = flights.add_vertex("London")
+
+flights.add_undirected_edge(
+    tok, nyc, "6743 miles")
+flights.add_undirected_edge(
+    tok, lon, "5941 miles")
+flights.add_undirected_edge(
+    nyc, lon, "3425 miles")</pre>
+    </div>
+  </div>
+  <p style="text-align:center; margin-top:1rem; color:var(--dim);">Same structure, same operations, two languages.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 10: QUERYING -->
+<div class="slide">
+  <h2>Asking Questions About a Graph</h2>
+  <pre style="font-size:0.95rem; max-width:50rem;">
+<span style="color:var(--dim);">// "What flights leave from Tokyo?"</span>
+<span style="color:var(--accent);">for</span> (Edge* e : *graph.GetEdgesFrom(tokyo)) {
+    cout << e->toVertex->label      <span style="color:var(--dim);">// destination</span>
+         << ", " << e->weight;       <span style="color:var(--dim);">// distance</span>
+}
+
+<span style="color:var(--dim);">// "Can I fly direct from London to Sydney?"</span>
+<span style="color:var(--accent);">if</span> (graph.HasEdge(london, sydney)) { ... }
+
+<span style="color:var(--dim);">// "How many cities are in the network?"</span>
+graph.GetVertices().size();
+  </pre>
+  <p style="text-align:center; color:var(--dim); margin-top:1rem;">The graph API gives you the building blocks. You ask the questions.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 11: TEXT ADVENTURE -->
+<div class="slide">
+  <h2>Graphs as Game Worlds</h2>
+  <div class="diagram" style="font-size:0.95rem;">
+          <span class="label">north</span>
+<span class="node">[ Kitchen ]</span><span class="edge">─────────</span><span class="node">[ Living Room ]</span>
+     <span class="edge">│</span>                        <span class="edge">│</span>
+   <span class="label">south</span>                    <span class="label">east</span>
+     <span class="edge">│</span>                        <span class="edge">│</span>
+<span class="node">[ Garage  ]</span>            <span class="node">[  Bedroom  ]</span>
+                              <span class="edge">│</span>
+                          <span class="label">down</span>
+                              <span class="edge">│</span>
+                        <span class="node">[  Basement  ]</span>
+  </div>
+  <div class="highlight-box">
+    <p style="font-size:1rem;">Every classic text adventure — Zork, Colossal Cave, MUDs — is a graph. Rooms are vertices. Doors are edges. Edge labels are directions. When you type <code style="color:var(--accent3);">go north</code>, the engine follows an edge.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 12: WHAT YOU BUILD -->
+<div class="slide">
+  <h2>What You'll Build</h2>
+  <div class="build-preview">
+    <div class="build-card">
+      <div class="emoji">🔬</div>
+      <h4>Lab: Graph Familiarity</h4>
+      <p>Run the flight demo.<br>Build your own graph.<br>Query it with code.</p>
+    </div>
+    <div class="build-card">
+      <div class="emoji">🏠</div>
+      <h4>Homework: Navigable World</h4>
+      <p>Design a space.<br>Build it as a graph.<br>Walk through it with commands.</p>
+    </div>
+  </div>
+  <p style="text-align:center; margin-top:2rem; color:var(--dim);">Create first. Theory later. Let's go.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ SLIDE 13: END -->
+<div class="slide">
+  <h1>Time to build.</h1>
+  <p class="subtitle" style="color:var(--dim);">Open the lab instructions and start with Part 1.</p>
+  <p style="margin-top:2rem; font-family:var(--mono); font-size:0.85rem; color:var(--dim); font-style:italic;">CSC 249 · Data Structures · Alamance Community College</p>
+</div>
+
+</div><!-- /deck -->
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const numEl = document.getElementById('slideNum');
+  let current = 0;
+
+  function show(n) {
+    if (n < 0 || n >= slides.length) return;
+    slides[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    numEl.textContent = `${current + 1} / ${slides.length}`;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(current + 1); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); show(current - 1); }
+    if (e.key === 'Home') { e.preventDefault(); show(0); }
+    if (e.key === 'End') { e.preventDefault(); show(slides.length - 1); }
+  });
+
+  // Touch support
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) {
+      diff > 0 ? show(current + 1) : show(current - 1);
+    }
+  });
+
+  // Click edges to advance
+  document.addEventListener('click', e => {
+    const x = e.clientX / window.innerWidth;
+    if (x > 0.75) show(current + 1);
+    else if (x < 0.25) show(current - 1);
+  });
+
+  show(0);
+</script>
+</body>
+</html>
